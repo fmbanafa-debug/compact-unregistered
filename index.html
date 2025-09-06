@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Searchable Medication List</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .table-container {
+            max-height: 70vh; /* Adjust height as needed */
+            overflow-y: auto;
+        }
+        thead th {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Unregistered Medications</h1>
+            <p class="text-gray-600 mb-6">Use the fields below to search and filter the medication data.</p>
+            
+            <!-- Search and Filter Inputs -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div>
+                    <label for="nameSearch" class="block text-sm font-medium text-gray-700">Active Ingredient Name</label>
+                    <input type="text" id="nameSearch" onkeyup="filterTable()" placeholder="Search by name..." class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                </div>
+                <div>
+                    <label for="strengthSearch" class="block text-sm font-medium text-gray-700">Strength</label>
+                    <input type="text" id="strengthSearch" onkeyup="filterTable()" placeholder="Search by strength..." class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                </div>
+                <div>
+                    <label for="dosageSearch" class="block text-sm font-medium text-gray-700">Dosage Form</label>
+                    <input type="text" id="dosageSearch" onkeyup="filterTable()" placeholder="Search by dosage form..." class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                </div>
+                <div>
+                    <label for="tradeNameSearch" class="block text-sm font-medium text-gray-700">Trade Name</label>
+                    <input type="text" id="tradeNameSearch" onkeyup="filterTable()" placeholder="Search by trade name..." class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                </div>
+                <div>
+                    <label for="reasonFilter" class="block text-sm font-medium text-gray-700">Reason</label>
+                    <select id="reasonFilter" onchange="filterTable()" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                        <option value="">All</option>
+                        <option value="To be registered">To be registered</option>
+                        <option value="Additional alternative required">Additional alternative required</option>
+                        <option value="N/A">N/A (Blank)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="table-container">
+                <table class="min-w-full divide-y divide-gray-200 table-fixed" id="medicationTable">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-2/6">Active Ingredient Name</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">Strength</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">Dosage Form</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">Trade Name</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <!-- Data is dynamically populated by the script -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <footer class="text-center text-sm text-gray-500 mt-8">
+            <p>Data is dynamically filtered using JavaScript.</p>
+        </footer>
+    </div>
+
+    <script>
+        const data = [
+            ["ACETAMINOPHEN + CODEINE", "120 MG + 12 MG / 5ML, 473ML", "ELIXIR", "To be registered", `<a href="https://en.wikipedia.org/wiki/Codeine/paracetamol" target="_blank" class="text-indigo-600 hover:text-indigo-900">Tylenol w/ Codeine</a>`],
+            ["ACYCLOVIR (ACICLOVIR)", "3% (30 MG/G)", "EYE OINTMENT", "To be registered", `<a href="https://en.wikipedia.org/wiki/Aciclovir" target="_blank" class="text-indigo-600 hover:text-indigo-900">Zovirax</a>`],
+            ["AMILORIDE", "5MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Amiloride" target="_blank" class="text-indigo-600 hover:text-indigo-900">Midamor</a>`],
+            ["AMINO ACIDS,CARBOHYDRATE,FAT", " ", " ", "To be registered", "N/A"],
+            ["AMINO ACIDS,ELECTROLYTES", " ", " ", "To be registered", "N/A"],
+            ["AMITRIPTYLINE HYDROCHLORIDE", "25 MG/5 ML (150ML)", "ORAL SOLUTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Amitriptyline" target="_blank" class="text-indigo-600 hover:text-indigo-900">Elavil</a>`],
+            ["ANAGRELIDE HYDROCHLORIDE", "500 MCG", "CAPSULE", "To be registered", `<a href="https://en.wikipedia.org/wiki/Anagrelide" target="_blank" class="text-indigo-600 hover:text-indigo-900">Agrylin</a>`],
+            ["ANTHRAX IMMUNE GLOBULIN", "60 IU 50ML VIAL", "INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Anthrax_immune_globulin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Anthalob</a>`],
+            ["ANTHRAX VACCINE", " ", " ", "To be registered", `<a href="https://en.wikipedia.org/wiki/Anthrax_vaccines" target="_blank" class="text-indigo-600 hover:text-indigo-900">BioThrax</a>`],
+            ["ARTESUNATE", "60 MG", "POWDER FOR INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Artesunate" target="_blank" class="text-indigo-600 hover:text-indigo-900">Artesun</a>`],
+            ["ASCORBIC ACID (VITAMIN C)", "500MG", "INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Vitamin_C" target="_blank" class="text-indigo-600 hover:text-indigo-900">Cevit</a>`],
+            ["BENZYLPENICILLIN", "1000000 IU (600MG)", "POWDER FOR INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Benzylpenicillin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Penicillin G</a>`],
+            ["BROMAZEPAM", "1.5MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Bromazepam" target="_blank" class="text-indigo-600 hover:text-indigo-900">Lexotan</a>`],
+            ["BUMETANIDE", "1 MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Bumetanide" target="_blank" class="text-indigo-600 hover:text-indigo-900">Bumex</a>`],
+            ["BUSERELIN ACETATE", "1 MG/ML", "INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Buserelin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Suprefact</a>`],
+            ["CALCITRIOL", "0.5 MCG", "CAPSULE", "To be registered", `<a href="https://en.wikipedia.org/wiki/Calcitriol" target="_blank" class="text-indigo-600 hover:text-indigo-900">Rocaltrol</a>`],
+            ["CALCIUM EDETATE DISODIUM", "50MG/ML (10ML)", "SOLUTION FOR INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Sodium_calcium_edetate" target="_blank" class="text-indigo-600 hover:text-indigo-900">Calcium Disodium Versenate</a>`],
+            ["CALCIUM FOLINATE (FOLINIC ACID)", "15 MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Folinic_acid" target="_blank" class="text-indigo-600 hover:text-indigo-900">Leucovorin</a>`],
+            ["CARDIOPLEGIC SOLUTION", "1000ML BOTTLE OR BAG", "SOLUTION", "To be registered", "N/A"],
+            ["CENTRAL THREE CHAMBER PARENTERAL NUTRITION 1500 ML BAG WITH ELECTROLYTES, IV LIPIDS OLIVE OIL AND SOYBEAN OIL", " ", " ", "To be registered", "N/A"],
+            ["CENTRAL THREE CHAMBER PARENTERAL NUTRITION 1970 ML BAG WITH ELECTROLYTES, IV LIPIDS FISH BASED WITH MEDIUM CHAIN TRIGLYCERIDE AND OLIVE OIL, SOYBEAN OIL", " ", " ", "To be registered", "N/A"],
+            ["CENTRAL THREE CHAMBER PARENTERAL NUTRITION 2463 ML BAG WITH ELECTROLYTES, IV LIPIDS FISH BASED WITH MEDIUM CHAIN TRIGLYCERIDE AND OLIVE OIL, SOYBEAN OIL", " ", " ", "To be registered", "N/A"],
+            ["CENTRAL THREE CHAMBER PARENTERAL NUTRITION 986 ML BAG WITH ELECTROLYTES, IV LIPIDS FISH BASED WITH MEDIUM CHAIN TRIGLYCERIDE AND OLIVE OIL, SOYBEAN OIL", " ", " ", "To be registered", "N/A"],
+            ["CHLOROTHIAZIDE", "500MG", "POWDER FOR INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Chlorothiazide" target="_blank" class="text-indigo-600 hover:text-indigo-900">Diuril</a>`],
+            ["CLONIDINE", "0.10 MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Clonidine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Catapres</a>`],
+            ["CLONIDINE", "0.15 MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Clonidine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Catapres</a>`],
+            ["CLOXACILLIN", "250 MG", "CAPSULE", "To be registered", `<a href="https://en.wikipedia.org/wiki/Cloxacillin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Cloxapen</a>`],
+            ["CLOXACILLIN", "500 MG", "CAPSULE", "To be registered", `<a href="https://en.wikipedia.org/wiki/Cloxacillin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Cloxapen</a>`],
+            ["COBICISTAT + ELVITEGRAVIR  + EMTRICITABINE  + TENOFOVIR DISOPROXIL", "150MG + 150MG + 200MG + 245MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Elvitegravir/cobicistat/emtricitabine/tenofovir" target="_blank" class="text-indigo-600 hover:text-indigo-900">Stribild</a>`],
+            ["COBIMETINIB", "20 MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Cobimetinib" target="_blank" class="text-indigo-600 hover:text-indigo-900">Cotellic</a>`],
+            ["CONJUGATED ESTROGENS", "1.25 MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Conjugated_estrogens" target="_blank" class="text-indigo-600 hover:text-indigo-900">Premarin</a>`],
+            ["CONJUGATED ESTROGENS", "0.3 mg", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Conjugated_estrogens" target="_blank" class="text-indigo-600 hover:text-indigo-900">Premarin</a>`],
+            ["COPPER", "0.4 MG/ML (10 ML) VIAL", "INJECTION", "To be registered", "N/A"],
+            ["COSYNTROPIN (TETRACOSACTRIN)", "0.25 MG/ML (1 ML) VIAL", "INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Tetracosactide" target="_blank" class="text-indigo-600 hover:text-indigo-900">Cortrosyn</a>`],
+            ["DANTROLENE SODIUM", "250 MG", "INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Dantrolene" target="_blank" class="text-indigo-600 hover:text-indigo-900">Dantrium</a>`],
+            ["DEXAMETHASONE", "500 MCG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Dexamethasone" target="_blank" class="text-indigo-600 hover:text-indigo-900">Decadron</a>`],
+            ["DEXAMETHASONE", "1.5 MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Dexamethasone" target="_blank" class="text-indigo-600 hover:text-indigo-900">Decadron</a>`],
+            ["DEXRAZOXANE", "500 MG", "INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Dexrazoxane" target="_blank" class="text-indigo-600 hover:text-indigo-900">Zinecard</a>`],
+            ["DEXTROSE 5 % IN 100 ML MINIBAG PLUS", " ", " ", "To be registered", "N/A"],
+            ["DEXTROSE 5 % IN 50 ML MINIBAG PLUS", " ", " ", "To be registered", "N/A"],
+            ["DEXTROSE 5% PIGGY BAG 25ML", " ", " ", "To be registered", "N/A"],
+            ["DEXTROSE 5% WITH SODIUM CHLORIDE 0.45% WITH POTASSIUM CHLORIDE 20 MEQ INTRAVENOUS SOLUTION 1000 ML BAG", " ", " ", "To be registered", "N/A"],
+            ["DIAZOXIDE", "50 MG/ML", "ORAL LIQUID", "To be registered", `<a href="https://en.wikipedia.org/wiki/Diazoxide" target="_blank" class="text-indigo-600 hover:text-indigo-900">Proglycem</a>`],
+            ["DIGOXIN-SPECIFIC ANTIBODY FRAGMENT F(AB)", "40 MG", "POWDER FOR INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Digoxin_immune_fab" target="_blank" class="text-indigo-600 hover:text-indigo-900">DigiFab</a>`],
+            ["DIMERCAPROL", " ", " ", "To be registered", `<a href="https://en.wikipedia.org/wiki/Dimercaprol" target="_blank" class="text-indigo-600 hover:text-indigo-900">British Anti-Lewisite</a>`],
+            ["DINUTUXIMAB BETA", "4.44 MG/ML", "SOLUTION FOR INJECTION PARENTERAL", "To be registered", `<a href="https://en.wikipedia.org/wiki/Dinutuximab_beta" target="_blank" class="text-indigo-600 hover:text-indigo-900">Qarziba</a>`],
+            ["DIPHENHYDRAMINE HCL", "50 MG/ML", "INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Diphenhydramine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Benadryl</a>`],
+            ["DIPHENHYDRAMINE HCL", "25 MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Diphenhydramine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Benadryl</a>`],
+            ["DIPHENHYDRAMINE HYDROCHLORIDE", "50 MG", "CAPSULE", "To be registered", `<a href="https://en.wikipedia.org/wiki/Diphenhydramine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Benadryl</a>`],
+            ["DIPHTHERIA ANTITOXIN", "100000 IU", "INJECTION", "To be registered", "N/A"],
+            ["DIPHTHERIA; TETANUS VACCINE FOR ADULTS ; EACH 0.5 ML DOSE WITH NOT LESS THAN 40 IU TO 60 IU OF TETANUS TOXOID", " ", " ", "To be registered", `<a href="https://en.wikipedia.org/wiki/DT_vaccine" target="_blank" class="text-indigo-600 hover:text-indigo-900">DT-Vax</a>`],
+            ["DOBUTAMINE + DEXTROSE", "500MG/250ML + 5%", "INJECTION", "To be registered", "N/A"],
+            ["DOCUSATE SODIUM", "100 MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Docusate" target="_blank" class="text-indigo-600 hover:text-indigo-900">Colace</a>`],
+            ["DORNASE ALPHA", "2.5 MG/2.5 ML", "SOLUTION FOR NEBULIZER", "To be registered", `<a href="https://en.wikipedia.org/wiki/Dornase_alfa" target="_blank" class="text-indigo-600 hover:text-indigo-900">Pulmozyme</a>`],
+            ["DOXAPRAM HCL", " ", " ", "To be registered", `<a href="https://en.wikipedia.org/wiki/Doxapram" target="_blank" class="text-indigo-600 hover:text-indigo-900">Dopram</a>`],
+            ["DOXYCYCLINE", "50 MG/5 ML", "SYRUP ORAL", "To be registered", `<a href="https://en.wikipedia.org/wiki/Doxycycline" target="_blank" class="text-indigo-600 hover:text-indigo-900">Vibramycin</a>`],
+            ["DOXYCYCLINE MONOHYDRATE", "40 MG", "MODIFIED RELEASE CAPSULE", "To be registered", `<a href="https://en.wikipedia.org/wiki/Doxycycline" target="_blank" class="text-indigo-600 hover:text-indigo-900">Oracea</a>`],
+            ["ELAPEGADEMASE", "2.4 MG/1.5 ML (1.6 MG/ML)", "SOLUTION FOR INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Elapegademase" target="_blank" class="text-indigo-600 hover:text-indigo-900">Revcovi</a>`],
+            ["EMTRICITABINE", "10 MG/ML", "ORAL LIQUID", "To be registered", `<a href="https://en.wikipedia.org/wiki/Emtricitabine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Emtriva</a>`],
+            ["ENOXAPARIN", "30 MG/0.3 ML", "SOLUTION FOR INJECTION IN PRE-FILLED SYRINGE", "To be registered", `<a href="https://en.wikipedia.org/wiki/Enoxaparin_sodium" target="_blank" class="text-indigo-600 hover:text-indigo-900">Lovenox</a>`],
+            ["EPOPROSTENOL", "500 MCG", "INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Epoprostenol" target="_blank" class="text-indigo-600 hover:text-indigo-900">Flolan</a>`],
+            ["ERGOCALCIFEROL (VITAMIN D2) 50,000 IU CAPSULE", "50,000 IU", "CAPSULE", "To be registered", `<a href="https://en.wikipedia.org/wiki/Ergocalciferol" target="_blank" class="text-indigo-600 hover:text-indigo-900">Drisdol</a>`],
+            ["ERYTHROMYCIN", "5% (5MG/G)", "EYE OINTMENT", "To be registered", `<a href="https://en.wikipedia.org/wiki/Erythromycin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Ery-Tab</a>`],
+            ["ESLICARBAZEPINE ACETATE", "800 MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Eslicarbazepine_acetate" target="_blank" class="text-indigo-600 hover:text-indigo-900">Aptiom</a>`],
+            ["ESTERIFIED ESTROGEN", "300 MCG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Esterified_estrogens" target="_blank" class="text-indigo-600 hover:text-indigo-900">Menest</a>`],
+            ["ETHANOL 100%", " ", " ", "To be registered", "N/A"],
+            ["ETHANOLAMINE OLEATE", "5% (2 ML)", "SOLUTION FOR INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Ethanolamine_oleate" target="_blank" class="text-indigo-600 hover:text-indigo-900">Ethamolin</a>`],
+            ["ETHOSUXIMIDE", "250 MG", "CAPSULE", "To be registered", `<a href="https://en.wikipedia.org/wiki/Ethosuximide" target="_blank" class="text-indigo-600 hover:text-indigo-900">Zarontin</a>`],
+            ["ETHYL ALCOHOL ABSOLUTE", " ", "INJECTION", "To be registered", "N/A"],
+            ["ETOMIDATE", "2MG/ML", "INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Etomidate" target="_blank" class="text-indigo-600 hover:text-indigo-900">Amidate</a>`],
+            ["FERRIC HYDROXIDE (ELEMENTAL IRON)", "50MG/5ML", "Bottle", "To be registered", "N/A"],
+            ["FERROUS SULFATE", "325MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Ferrous_sulfate" target="_blank" class="text-indigo-600 hover:text-indigo-900">Feosol</a>`],
+            ["FLECAINIDE ACETATE", "50 MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Flecainide" target="_blank" class="text-indigo-600 hover:text-indigo-900">Tambocor</a>`],
+            ["FLUNARIZINE", "5 MG", "CAPSULE", "To be registered", `<a href="https://en.wikipedia.org/wiki/Flunarizine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Sibelium</a>`],
+            ["FOLIC ACID", "25 MG/5 ML (5 ML) AMPOULE", "INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Folic_acid" target="_blank" class="text-indigo-600 hover:text-indigo-900">Folvite</a>`],
+            ["FOLIC ACID", "5 MG/ML (1ML) VIAL", "INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Folic_acid" target="_blank" class="text-indigo-600 hover:text-indigo-900">Folvite</a>`],
+            ["FORMOTEROL", " ", " ", "To be registered", `<a href="https://en.wikipedia.org/wiki/Formoterol" target="_blank" class="text-indigo-600 hover:text-indigo-900">Foradil</a>`],
+            ["GLYCERIN", "BOTTLE 500 ML", "ORAL SOLUTION", "To be registered", "N/A"],
+            ["GLYCERYL TRINITRATE", "500 MCG", "SUBLINGUAL TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Nitroglycerin_(drug)" target="_blank" class="text-indigo-600 hover:text-indigo-900">Nitrostat</a>`],
+            ["GLYCERYL TRINITRATE", "(2%) 20 MG/G (1 G)", "OINTMENT", "To be registered", `<a href="https://en.wikipedia.org/wiki/Nitroglycerin_(drug)" target="_blank" class="text-indigo-600 hover:text-indigo-900">Nitro-Bid</a>`],
+            ["GLYCOPYRROLATE", "1 MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Glycopyrronium_bromide" target="_blank" class="text-indigo-600 hover:text-indigo-900">Robinul</a>`],
+            ["GONADORELIN", "100 MCG", "POWDER FOR INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Gonadorelin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Factrel</a>`],
+            ["HAEMOPHILUS INFLUENZA B", "10 MCG/0.5 ML", "INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Haemophilus_influenzae_type_B_vaccine" target="_blank" class="text-indigo-600 hover:text-indigo-900">ActHIB</a>`],
+            ["HALOPERIDOL", "1.5 MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Haloperidol" target="_blank" class="text-indigo-600 hover:text-indigo-900">Haldol</a>`],
+            ["HALOPERIDOL", "10 MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Haloperidol" target="_blank" class="text-indigo-600 hover:text-indigo-900">Haldol</a>`],
+            ["HEPTAVALENT BOTULINUM ANTITOXIN", "20 ML", "INJECTION", "To be registered", "N/A"],
+            ["HEPTAVALENT BOTULINUM ANTITOXIN", "50 ML", "INJECTION", "To be registered", "N/A"],
+            ["HYDROMORPHONE", "8 MG", "IMMEDIATE RELEASE TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Hydromorphone" target="_blank" class="text-indigo-600 hover:text-indigo-900">Dilaudid</a>`],
+            ["IMIPRAMINE HYDROCHLORIDE", "10 MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Imipramine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Tofranil</a>`],
+            ["IMMUNOGLOBULIN SMALLPOX", "50000 IU 15 ML", "FOR INJECTION PARENTERAL", "To be registered", "N/A"],
+            ["INACTIVATED POLIO VACCINE (IPV) 0.5 ML INJECTION", " ", " ", "To be registered", `<a href="https://en.wikipedia.org/wiki/Polio_vaccine" target="_blank" class="text-indigo-600 hover:text-indigo-900">IPOL</a>`],
+            ["INDOMETHACIN", "1 MG", "POWDER FOR INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Indomethacin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Indocin</a>`],
+            ["INDOMETHACIN", "75 MG", "RETARD CAPSULE", "To be registered", `<a href="https://en.wikipedia.org/wiki/Indomethacin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Indocin</a>`],
+            ["KETOCONAZOLE", "200 MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Ketoconazole" target="_blank" class="text-indigo-600 hover:text-indigo-900">Nizoral</a>`],
+            ["L-ARGININE HYDROCHLORIDE", "5 G/10 ML", "STERILE SOLUTION FOR IV INJECTION", "To be registered", "N/A"],
+            ["L-CARNITINE", " ", " ", "To be registered", `<a href="https://en.wikipedia.org/wiki/Carnitine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Carnitor</a>`],
+            ["LEUCINE", "100 MG", "SACHET", "To be registered", "N/A"],
+            ["LEVOMEPROMAZINE", "25MG/ML (1 ML)", "SOLUTION FOR INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Levomepromazine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Nozinan</a>`],
+            ["LIDOCAINE + EPINEPHRINE", "1.5% + 1:200000 (5 ML)", "SOLUTION FOR INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Lidocaine/epinephrine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Xylocaine w/ Epinephrine</a>`],
+            ["LIDOCAINE HYDROCHLORIDE ANHYDROUS + EPINEPHRINE", "1% + 1 IN 100,000 (20 ML)", "INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Lidocaine/epinephrine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Xylocaine w/ Epinephrine</a>`],
+            ["LIOTHYRONINE SODIUM", "25 MCG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Liothyronine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Cytomel</a>`],
+            ["L-METHIONINE", "100 G", "CRYSTAL POWDER", "To be registered", "N/A"],
+            ["LOMUSTINE", "10 MG", "CAPSULE", "To be registered", `<a href="https://en.wikipedia.org/wiki/Lomustine" target="_blank" class="text-indigo-600 hover:text-indigo-900">CeeNU</a>`],
+            ["LOMUSTINE", "100 MG", "CAPSULE", "To be registered", `<a href="https://en.wikipedia.org/wiki/Lomustine" target="_blank" class="text-indigo-600 hover:text-indigo-900">CeeNU</a>`],
+            ["LOMUSTINE", "40 MG", "CAPSULE", "To be registered", `<a href="https://en.wikipedia.org/wiki/Lomustine" target="_blank" class="text-indigo-600 hover:text-indigo-900">CeeNU</a>`],
+            ["LOPERAMIDE", "1 MG/5 ML (100 ML)", "ORAL SOLUTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Loperamide" target="_blank" class="text-indigo-600 hover:text-indigo-900">Imodium</a>`],
+            ["LORAZEPAM", " ", " ", "To be registered", `<a href="https://en.wikipedia.org/wiki/Lorazepam" target="_blank" class="text-indigo-600 hover:text-indigo-900">Ativan</a>`],
+            ["MAGNESIUM OXIDE", "663 MG (EQUIVALENT TO 400 MG (16.5 MMOL) MAGNESIUM)", "CAPSULE", "To be registered", `<a href="https://en.wikipedia.org/wiki/Magnesium_oxide" target="_blank" class="text-indigo-600 hover:text-indigo-900">Mag-Ox</a>`],
+            ["MEASLES VACCINE 0.5 ML A FREEZE DRIED LIVE ATTENUATED SINGLE DOSE", " ", " ", "To be registered", `<a href="https://en.wikipedia.org/wiki/Measles_vaccine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Attenuvax</a>`],
+            ["MEDROXYPROGESTERONE ACETATE", "2.5 MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Medroxyprogesterone_acetate" target="_blank" class="text-indigo-600 hover:text-indigo-900">Provera</a>`],
+            ["MEGESTROL ACETATE", "160MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Megestrol_acetate" target="_blank" class="text-indigo-600 hover:text-indigo-900">Megace</a>`],
+            ["MEGESTROL ACETATE", "40MG", "ORAL SCORED TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Megestrol_acetate" target="_blank" class="text-indigo-600 hover:text-indigo-900">Megace</a>`],
+            ["METHACHOLINE", "100 MG", "POWDER FOR INHALATION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Methacholine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Provocholine</a>`],
+            ["METHYLERGOMETRINE MALEATE", "0.125 MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Methylergometrine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Methergine</a>`],
+            ["METOLAZONE", "2.5 MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Metolazone" target="_blank" class="text-indigo-600 hover:text-indigo-900">Zaroxolyn</a>`],
+            ["METOPROLOL TARTRATE", "5 MG/5 ML", "INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Metoprolol" target="_blank" class="text-indigo-600 hover:text-indigo-900">Lopressor</a>`],
+            ["METYRAPONE", "250 MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Metyrapone" target="_blank" class="text-indigo-600 hover:text-indigo-900">Metopirone</a>`],
+            ["METYRAPONE", "250 MG", "CAPSULE", "To be registered", `<a href="https://en.wikipedia.org/wiki/Metyrapone" target="_blank" class="text-indigo-600 hover:text-indigo-900">Metopirone</a>`],
+            ["MINOCYCLINE", "100 MG", "CAPSULE", "To be registered", `<a href="https://en.wikipedia.org/wiki/Minocycline" target="_blank" class="text-indigo-600 hover:text-indigo-900">Minocin</a>`],
+            ["MINOXIDIL", "2.5 MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Minoxidil" target="_blank" class="text-indigo-600 hover:text-indigo-900">Loniten</a>`],
+            ["MODAFINIL", "200 MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Modafinil" target="_blank" class="text-indigo-600 hover:text-indigo-900">Provigil</a>`],
+            ["MONOBENZONE", "1000 G", "POWDER", "To be registered", `<a href="https://en.wikipedia.org/wiki/Monobenzone" target="_blank" class="text-indigo-600 hover:text-indigo-900">Benoquin</a>`],
+            ["MORPHINE", "20 MG/ML (120 ML) BOTTLE", "ORAL CONCENTRATED SOLUTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Morphine" target="_blank" class="text-indigo-600 hover:text-indigo-900">MS Contin</a>`],
+            ["MORPHINE PRESERVATIVE FREE", "1 MG/ML (5-10 ML)", "AMPOULE", "To be registered", `<a href="https://en.wikipedia.org/wiki/Morphine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Duramorph</a>`],
+            ["MULTIVITAMIN + ZINC", " ", "ORAL CHEWABLE TABLET", "To be registered", "N/A"],
+            ["MULTIVITAMIN FOR RENAL DIALYSIS", " ", "ORAL TABLET", "To be registered", "N/A"],
+            ["MULTIVITAMIN INJECTION FOR PEDIATRICS WITHOUT VITAMIN K 10ML", " ", " ", "To be registered", "N/A"],
+            ["MULTIVITAMIN WITH ZINC LIQUID, ORAL DROPS. CONTENT PER 1 ML:5751 IU VITAMIN A, 400 IU VITAMIN D, 50 IU VITAMIN E, 45 MG VITAMIN C, 0 .6 MG VITAMIN B1, 0.6 MG VITAMIN B2, 6 MG NIACINAMIDE, 0.6 MG VITAMIN B6, 15 MCG BIOTIN, 3 MG PANTOTHENIC ACID, 5", " ", "ORAL DROPS", "To be registered", "N/A"],
+            ["MULTIVITAMINS FOR MEN + L-CARNITINE", " ", " ", "To be registered", "N/A"],
+            ["MULTIVITAMINS FOR PEDIATRIC (A, B1, B2, B3, B5, B6, B7, B12, C, D3, E, K1, FOLIC ACID) INJECTION: CONCENTRATED, 4 ML & 1 ML VIAL FOR TPN", " ", " ", "To be registered", "N/A"],
+            ["MULTIVITAMINS WITH VITAMIN A, D, E, K IN WATER SOLUBLE FORM FOR PEDIATRIC", " ", " ", "To be registered", "N/A"],
+            ["MYCOPHENOLATE", "500MG", "INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Mycophenolic_acid" target="_blank" class="text-indigo-600 hover:text-indigo-900">CellCept</a>`],
+            ["NEOMYCIN 3.5 MG + POLYMYXIN B 5000 U + BACITRACIN ZINC 400 U PER G OINTMENT 0.9 G", " ", " ", "To be registered", `<a href="https://en.wikipedia.org/wiki/Neomycin/polymyxin_B/bacitracin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Neosporin</a>`],
+            ["NEOMYCIN 3.5 MG + POLYMYXIN B 5000 U + BACITRACIN ZINC 400 U PER G OINTMENT 20 - 30 G", " ", " ", "To be registered", `<a href="https://en.wikipedia.org/wiki/Neomycin/polymyxin_B/bacitracin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Neosporin</a>`],
+            ["NICARDIPINE", "10 MG/10 ML", "PREMIXED INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Nicardipine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Cardene</a>`],
+            ["NICARDIPINE", "20 MG IN SODIUM CHLORIDE 0.9% (200 ML)", "INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Nicardipine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Cardene</a>`],
+            ["NITROGLYCERIN IN DEXTROSE", "200 MCG/ML , 5%", "INFUSION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Nitroglycerin_(drug)" target="_blank" class="text-indigo-600 hover:text-indigo-900">Nitro-Bid IV</a>`],
+            ["OXYCODONE HCL", "10 MG/ML", "INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Oxycodone" target="_blank" class="text-indigo-600 hover:text-indigo-900">OxyContin</a>`],
+            ["OXYTOCIN + ERGOMETRINE", "5 IU/ML + 500 MCG/ML", "INJECTION AMPOULE OR VIAL", "To be registered", `<a href="https://en.wikipedia.org/wiki/Ergometrine/oxytocin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Syntometrine</a>`],
+            ["PAMIDRONATE", "3MG/ML", "INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Pamidronic_acid" target="_blank" class="text-indigo-600 hover:text-indigo-900">Aredia</a>`],
+            ["PEGVALIASE", "10MG/0.5ML", "SOLUTION PREFILLED SYRINGE", "To be registered", `<a href="https://en.wikipedia.org/wiki/Pegvaliase" target="_blank" class="text-indigo-600 hover:text-indigo-900">Palynziq</a>`],
+            ["PENICILLIN G PROCAIN,PENICILLIN G SODIUM", " ", " ", "To be registered", "N/A"],
+            ["PERAMPANEL", "0.5 MG/ML", "SUSPENSION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Perampanel" target="_blank" class="text-indigo-600 hover:text-indigo-900">Fycompa</a>`],
+            ["PERIPHERAL THREE CHAMBER PARENTERAL NUTRITION 1000 ML BAG WITH ELECTROLYTES, IV LIPIDS OLIVE OIL AND SOYBEAN OIL", " ", " ", "To be registered", "N/A"],
+            ["PERIPHERAL THREE CHAMBER PARENTERAL NUTRITION 1250 ML BAG WITH ELECTROLYTES, IV LIPIDS FISH BASED WITH MEDIUM CHAIN TRIGLYCERIDE AND, SOYBEAN OIL", " ", " ", "To be registered", "N/A"],
+            ["PERIPHERAL THREE CHAMBER PARENTERAL NUTRITION 1875 ML BAG WITH ELECTROLYTES, IV LIPIDS FISH BASED WITH MEDIUM CHAIN TRIGLYCERIDE AND, SOYBEAN OIL", " ", " ", "To be registered", "N/A"],
+            ["PERIPHERAL THREE CHAMBER PARENTERAL NUTRITION 2500 ML BAG WITH ELECTROLYTES, IV LIPIDS FISH BASED WITH MEDIUM CHAIN TRIGLYCERIDE AND, SOYBEAN OIL", " ", " ", "To be registered", "N/A"],
+            ["PHENAZOPYRIDINE", "100MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Phenazopyridine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Pyridium</a>`],
+            ["PHENOBARBITONE", " ", " ", "To be registered", `<a href="https://en.wikipedia.org/wiki/Phenobarbital" target="_blank" class="text-indigo-600 hover:text-indigo-900">Luminal</a>`],
+            ["PHENOXYBENZAMINE", "10MG", "CAPSULE", "To be registered", `<a href="https://en.wikipedia.org/wiki/Phenoxybenzamine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Dibenzyline</a>`],
+            ["PHENOXYMETHYLPENICILLIN", "250 MG/5 ML", "ORAL LIQUID", "To be registered", `<a href="https://en.wikipedia.org/wiki/Phenoxymethylpenicillin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Penicillin V</a>`],
+            ["PHENOXYMETHYLPENICILLIN (PENICILLIN V)", "125 MG/5 ML (100 ML)", "POWDER FOR ORAL SOLUTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Phenoxymethylpenicillin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Penicillin V</a>`],
+            ["PHENYTOIN", "50MG", "CAPSULE", "To be registered", `<a href="https://en.wikipedia.org/wiki/Phenytoin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Dilantin</a>`],
+            ["PHOSPHATE", "500 MG", "EFFERVESCENT TABLET", "To be registered", "N/A"],
+            ["PHOSPHOLIPIDS,SURFACTANT ASSOCIATED PROTEINS B AND C", " ", " ", "To be registered", "N/A"],
+            ["PHYTOMENADIONE", "10 MG", "CAPSULE", "To be registered", `<a href="https://en.wikipedia.org/wiki/Phytomenadione" target="_blank" class="text-indigo-600 hover:text-indigo-900">Vitamin K1</a>`],
+            ["PIMOZIDE", "1 MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Pimozide" target="_blank" class="text-indigo-600 hover:text-indigo-900">Orap</a>`],
+            ["PLASMA EXPANDER MODIFIED GELATIN INFUSION BAG 500 ML", " ", " ", "To be registered", "N/A"],
+            ["POLIDOCANOL", "0.01", "INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Polidocanol" target="_blank" class="text-indigo-600 hover:text-indigo-900">Asclera</a>`],
+            ["POLIDOCANOL", "0.5% (2 ML)", "SOLUTION FOR INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Polidocanol" target="_blank" class="text-indigo-600 hover:text-indigo-900">Asclera</a>`],
+            ["POLIOMYLITIS VACCINE ORAL BIVALENT TYPES 1 AND 3 (20 DOSES) BIVALENT ORAL POLIO VACCINE (B OPV) CONSISTS OF LIVE ATTENUATED", " ", " ", "To be registered", `<a href="https://en.wikipedia.org/wiki/Polio_vaccine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Oral Polio Vaccine</a>`],
+            ["POTASSIUM CHLORIDE 40 MMOL; SODIUM CHLORIDE 0.9% 1000 ML BAG", " ", " ", "To be registered", "N/A"],
+            ["POTASSIUM CITRATE MONOHYDRATE + CITRIC ACID MONOHYDRATE", "1100 MG, 334 MG", "ORAL SOLUTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Potassium_citrate" target="_blank" class="text-indigo-600 hover:text-indigo-900">Urocit-K</a>`],
+            ["POTASSIUM PHOSPHATE", "3MMOL/ML", "INJECTION", "To be registered", "N/A"],
+            ["PRALIDOXIME/ATROPINE AUTOINJECTOR", " ", " ", "To be registered", "N/A"],
+            ["PRAZOSIN", "1 MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Prazosin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Minipress</a>`],
+            ["PREDNISONE", "50 MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Prednisone" target="_blank" class="text-indigo-600 hover:text-indigo-900">Deltasone</a>`],
+            ["PROPRANOLOL", "40 MG/5 ML", "ORAL SOLUTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Propranolol" target="_blank" class="text-indigo-600 hover:text-indigo-900">Inderal</a>`],
+            ["PROPYLENE GLYCOL LIQUID 99.7% USP", " ", " ", "To be registered", "N/A"],
+            ["PRUSSIAN BLUE", " ", " ", "To be registered", `<a href="https://en.wikipedia.org/wiki/Prussian_blue_(medical_use)" target="_blank" class="text-indigo-600 hover:text-indigo-900">Radiogardase</a>`],
+            ["PSEUDOEPHEDRINE HYDROCHLORIDE", "30 MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Pseudoephedrine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Sudafed</a>`],
+            ["PYRIDOSTIGMINE", "60 MG/5 ML", "SYRUP", "To be registered", `<a href="https://en.wikipedia.org/wiki/Pyridostigmine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Mestinon</a>`],
+            ["PYRIDOXINE HYDROCHLORIDE (VITAMIN B6) 25MG", " ", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Vitamin_B6" target="_blank" class="text-indigo-600 hover:text-indigo-900">Vitamin B6</a>`],
+            ["PYRIDOXINE HYDROCHLORIDE (VITAMIN B6) 50MG", " ", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Vitamin_B6" target="_blank" class="text-indigo-600 hover:text-indigo-900">Vitamin B6</a>`],
+            ["QUINIDINE SULFATE", "300 MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Quinidine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Quinidex</a>`],
+            ["QUININE SULFATE", "300MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Quinine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Qualaquin</a>`],
+            ["RABIES IMMUNOGLOBULIN OF HUMAN ORIGIN", "100-150 IU/1 ML", "INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Rabies_immune_globulin" target="_blank" class="text-indigo-600 hover:text-indigo-900">HyperRAB</a>`],
+            ["REGADENOSON", "0.4MG", "INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Regadenoson" target="_blank" class="text-indigo-600 hover:text-indigo-900">Lexiscan</a>`],
+            ["RIFAPENTINE", "150MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Rifapentine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Priftin</a>`],
+            ["RILUZOLE", "50 MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Riluzole" target="_blank" class="text-indigo-600 hover:text-indigo-900">Rilutek</a>`],
+            ["SALMETEROL", " ", " ", "To be registered", `<a href="https://en.wikipedia.org/wiki/Salmeterol" target="_blank" class="text-indigo-600 hover:text-indigo-900">Serevent</a>`],
+            ["SELENIUM", "10 TO 50MCG/ML", "INJECTION", "To be registered", "N/A"],
+            ["SMALLPOX VACCINE", " ", " ", "To be registered", `<a href="https://en.wikipedia.org/wiki/Smallpox_vaccine" target="_blank" class="text-indigo-600 hover:text-indigo-900">ACAM2000</a>`],
+            ["SODIUM BICARBONATE", "4.2% [0.5MMOL/1ML] 10 ML", "SYRINGE", "To be registered", `<a href="https://en.wikipedia.org/wiki/Sodium_bicarbonate_(medical_use)" target="_blank" class="text-indigo-600 hover:text-indigo-900">Neut</a>`],
+            ["SODIUM CHLORIDE", "7%", "SOLUTION FOR INHALATION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Saline_(medicine)" target="_blank" class="text-indigo-600 hover:text-indigo-900">Hyper-Sal</a>`],
+            ["SODIUM NITRITE 300 MG/10 ML AND SODIUM THIOSULFATE 12.5 MG/50 ML", " ", "SOLUTION FOR INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Sodium_thiosulfate_(medical_use)" target="_blank" class="text-indigo-600 hover:text-indigo-900">Nithiodote</a>`],
+            ["SODIUM PHENYLBUTYRATE", "500MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Sodium_phenylbutyrate" target="_blank" class="text-indigo-600 hover:text-indigo-900">Buphenyl</a>`],
+            ["SOTALOL HYDROCHLORIDE", "160 MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Sotalol" target="_blank" class="text-indigo-600 hover:text-indigo-900">Betapace</a>`],
+            ["STERILE WATER FOR INJECTION 2000 ML BAG", " ", " ", "To be registered", "N/A"],
+            ["STIRIPENTOL", "250MG", "SACHET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Stiripentol" target="_blank" class="text-indigo-600 hover:text-indigo-900">Diacomit</a>`],
+            ["STREPTOMYCIN", " ", " ", "To be registered", `<a href="https://en.wikipedia.org/wiki/Streptomycin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Streptomycin</a>`],
+            ["STREPTOMYCIN", "1G", "POWDER FOR INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Streptomycin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Streptomycin</a>`],
+            ["SUCCIMER (DIMERCAPTOSUCCINIC ACID, DSMA)", "100 MG", "CAPSULE", "To be registered", `<a href="https://en.wikipedia.org/wiki/Succimer" target="_blank" class="text-indigo-600 hover:text-indigo-900">Chemet</a>`],
+            ["SUCRALFATE", "1 G/10 ML (420ML)", "ORAL SUSPENSION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Sucralfate" target="_blank" class="text-indigo-600 hover:text-indigo-900">Carafate</a>`],
+            ["SUCRALFATE", "1GM", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Sucralfate" target="_blank" class="text-indigo-600 hover:text-indigo-900">Carafate</a>`],
+            ["SUFENTANIL FORTE", "250 MCG/5 ML", "INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Sufentanil" target="_blank" class="text-indigo-600 hover:text-indigo-900">Sufenta</a>`],
+            ["TACROLIMUS", "0.75 MG", "PROLONGED RELEASE TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Tacrolimus" target="_blank" class="text-indigo-600 hover:text-indigo-900">Prograf</a>`],
+            ["TACROLIMUS", "5MG/ML", "INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Tacrolimus" target="_blank" class="text-indigo-600 hover:text-indigo-900">Prograf</a>`],
+            ["TERAZOSIN", "2 MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Terazosin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Hytrin</a>`],
+            ["TERAZOSIN", "5 MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Terazosin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Hytrin</a>`],
+            ["TESTOSTERONE", "50 MG/5 G (5 GM)", "TOPICAL GEL", "To be registered", `<a href="https://en.wikipedia.org/wiki/Testosterone_(medication)" target="_blank" class="text-indigo-600 hover:text-indigo-900">AndroGel</a>`],
+            ["TETANUS ANTITOXIN AMPOULE 1500 IU", " ", " ", "To be registered", "N/A"],
+            ["TETANUS IMMUNOGLOBULIN", "250 IU", "INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Tetanus_immune_globulin" target="_blank" class="text-indigo-600 hover:text-indigo-900">HyperTET</a>`],
+            ["THIOPENTAL SODIUM", "500 MG", "INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Thiopental" target="_blank" class="text-indigo-600 hover:text-indigo-900">Pentothal</a>`],
+            ["TIOPRONIN", "100 MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Tiopronin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Thiola</a>`],
+            ["TRACE ELEMENTS", " ", " ", "To be registered", "N/A"],
+            ["TRETINOIN", "10 MG", "CAPSULE", "To be registered", `<a href="https://en.wikipedia.org/wiki/Tretinoin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Vesanoid</a>`],
+            ["TRIAMCINOLONE HEXACETONIDE", "20 MG/ML", "INTRA-ARTICULAR INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Triamcinolone_hexacetonide" target="_blank" class="text-indigo-600 hover:text-indigo-900">Aristospan</a>`],
+            ["TRICHLORO ACETIC ACID POWDER", " ", " ", "To be registered", "N/A"],
+            ["TRIHEXYPHENIDYL (BENZHEXOL) HYDROCHLORIDE", " ", " ", "To be registered", `<a href="https://en.wikipedia.org/wiki/Trihexyphenidyl" target="_blank" class="text-indigo-600 hover:text-indigo-900">Artane</a>`],
+            ["TRIMETHOPRIM", "100 MG", "TABLET", "To be registered", `<a href="https://en.wikipedia.org/wiki/Trimethoprim" target="_blank" class="text-indigo-600 hover:text-indigo-900">Primsol</a>`],
+            ["TUBERCULIN (PPD SKIN TEST)", "1 TU - 5 TU /0.1 ML", "INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Tuberculin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Aplisol</a>`],
+            ["URIDINE MONOPHOSPHATE", "250 MG", "CAPSULE", "To be registered", "N/A"],
+            ["VACCINE: DIPHETHERIA ,TETANUS, PERTUSSIS VACCINE (DTWP) EACH 0.5 ML. DOSE CONTAINS: NOT LESS THAN 40 - 60 I.U. OF TETANUS TOXOID, NO T LESS THAN 25 LF (30 IU.) OF DIPHTHERIA TOXOID ADSORBED", " ", " ", "To be registered", `<a href="https://en.wikipedia.org/wiki/DPT_vaccine" target="_blank" class="text-indigo-600 hover:text-indigo-900">DTP</a>`],
+            ["VACCINE: DIPHTHERIA, TETANUS ,ACELLULAR PERTUSSIS (TDAP), ADOLESCENT AND ADULT SINGLE DOSE 0.5ML PREFILLED SYRINGE", " ", " ", "To be registered", `<a href="https://en.wikipedia.org/wiki/Tdap_vaccine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Boostrix</a>`],
+            ["VARICELLA ZOSTER IMMUNOGLOBULIN 200 IU/2 ML INJECTION", " ", " ", "To be registered", `<a href="https://en.wikipedia.org/wiki/Varicella_zoster_immune_globulin" target="_blank" class="text-indigo-600 hover:text-indigo-900">VariZIG</a>`],
+            ["VISMODEGIB", "150MG", "CAPSULE", "To be registered", `<a href="https://en.wikipedia.org/wiki/Vismodegib" target="_blank" class="text-indigo-600 hover:text-indigo-900">Erivedge</a>`],
+            ["VITAMIN B1 (THIAMINE HYDROCHLORIDE)", "100 MG/2 ML (2 ML) AMPOULE", "INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Thiamine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Thiamine</a>`],
+            ["VITAMIN B6 (PYRIDOXINE)", "50 MG/ML (2 ML)", "INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Vitamin_B6" target="_blank" class="text-indigo-600 hover:text-indigo-900">Pyridoxine</a>`],
+            ["YELLOW FEVER VACCINE STABILIZED FREEZE DRIED ATTENUATED VACCINE", " ", "INJECTION", "To be registered", `<a href="https://en.wikipedia.org/wiki/Yellow_fever_vaccine" target="_blank" class="text-indigo-600 hover:text-indigo-900">YF-Vax</a>`],
+            ["ZINC CHLORIDE", "1 MG/ML", "INJECTION", "To be registered", "N/A"],
+            ["ZINC GLUCONATE", "1 MG/ML (10ML) VIAL", "INJECTION", "To be registered", "N/A"],
+            ["ZINC SULPHATE", "1 MG/ML", "INJECTION", "To be registered", "N/A"],
+            ["ZINC SULPHATE", "22.5MG/25MG", "ELEMENTAL TAB", "To be registered", "N/A"],
+            ["ZINC SULPHATE", "5MG/ML (5ML) VIAL", "CONCENTRATED SOLUTION FOR INJ", "To be registered", "N/A"],
+            ["ZINC TRISODIUM PENTETATE", " ", " ", "To be registered", "N/A"],
+            ["ZONISAMIDE", "100MG", "CAPSULE", "To be registered", `<a href="https://en.wikipedia.org/wiki/Zonisamide" target="_blank" class="text-indigo-600 hover:text-indigo-900">Zonegran</a>`],
+            ["ABACAVIR 600 MG + DOLUTEGRAVIR 50 MG + LAMIVUDINE 300 MG TABLET", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Dolutegravir/abacavir/lamivudine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Triumeq</a>`],
+            ["ACETAZOLAMIDE INJECTION 500 MG VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Acetazolamide" target="_blank" class="text-indigo-600 hover:text-indigo-900">Diamox</a>`],
+            ["ACETIC ACID 2% SOLUTION", " ", " ", "Additional alternative required", "N/A"],
+            ["ACETYLCYSTEINE 2 G/10 ML INJECTION: CONCENTRATED, 10 ML AMPOULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Acetylcysteine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Acetadote</a>`],
+            ["ACTIVATED CHARCOAL POWDER", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Activated_charcoal_(medication)" target="_blank" class="text-indigo-600 hover:text-indigo-900">Actidose-Aqua</a>`],
+            ["ACTIVATED CHARCOAL TABLET OR CAPSULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Activated_charcoal_(medication)" target="_blank" class="text-indigo-600 hover:text-indigo-900">Actidose-Aqua</a>`],
+            ["AFATINIB 40MG TABLET", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Afatinib" target="_blank" class="text-indigo-600 hover:text-indigo-900">Gilotrif</a>`],
+            ["AGALSIDASE ALFA 1/MG/ML 3.5 ML VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Agalsidase_alfa" target="_blank" class="text-indigo-600 hover:text-indigo-900">Replagal</a>`],
+            ["AGALSIDASE BETA 5 MG FOR INJECTION PARENTERAL 1 ML", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Agalsidase_beta" target="_blank" class="text-indigo-600 hover:text-indigo-900">Fabrazyme</a>`],
+            ["ALGLUCOSIDASE ALFA 50 MG INJECTION: POWDER FOR, VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Alglucosidase_alfa" target="_blank" class="text-indigo-600 hover:text-indigo-900">Myozyme</a>`],
+            ["ALTEPLASE 50 MG INJECTION: POWDER FOR, VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Alteplase" target="_blank" class="text-indigo-600 hover:text-indigo-900">Activase</a>`],
+            ["AMINO ACIDS 10%,ELECTROLYTES", " ", " ", "Additional alternative required", "N/A"],
+            ["AMINO ACIDS 15%,ELECTROLYTES", " ", " ", "Additional alternative required", "N/A"],
+            ["AMIODARONE HYDROCHLORIDE 150 MG/3 ML INJECTION: CONCENTRATED, 3 ML AMPOULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Amiodarone" target="_blank" class="text-indigo-600 hover:text-indigo-900">Cordarone</a>`],
+            ["AMPHETAMINE SALT COMBINATION 10MG XR TABLET", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Amphetamine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Adderall XR</a>`],
+            ["AMPHOTERICIN B (AS LIPOSOMAL) 50 MG INJECTION: POWDER FOR, VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Amphotericin_B" target="_blank" class="text-indigo-600 hover:text-indigo-900">AmBisome</a>`],
+            ["AMPHOTERICIN B 50 MG INJECTION: POWDER FOR, VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Amphotericin_B" target="_blank" class="text-indigo-600 hover:text-indigo-900">Fungizone</a>`],
+            ["AMPICILLIN SODIUM/SULBACTAM SODIUM INJECTION VIAL 1.5 G", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Ampicillin/sulbactam" target="_blank" class="text-indigo-600 hover:text-indigo-900">Unasyn</a>`],
+            ["ANAKINRA 100 MG/0.67 ML INJECTION SYRINGE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Anakinra" target="_blank" class="text-indigo-600 hover:text-indigo-900">Kineret</a>`],
+            ["ANTHRAX IMMUNE GLOBULIN 60 IU INJECTION 50ML VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Anthrax_immune_globulin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Anthalob</a>`],
+            ["ANTHRAX VACCINE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Anthrax_vaccines" target="_blank" class="text-indigo-600 hover:text-indigo-900">BioThrax</a>`],
+            ["ANTIHEMOPHILIC 500IU TO 1000IU/WILLEBRAND 500 IU TO 1000IU", " ", " ", "Additional alternative required", "N/A"],
+            ["ANTIHEMOPHILIC COAGULATION FACTOR VIIA (RECOMBINANT) 1 MG VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Eptacog_alfa" target="_blank" class="text-indigo-600 hover:text-indigo-900">NovoSeven</a>`],
+            ["ANTIHEMOPHILIC COAGULATION FACTOR VIIA (RECOMBINANT) 2 MG VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Eptacog_alfa" target="_blank" class="text-indigo-600 hover:text-indigo-900">NovoSeven</a>`],
+            ["ANTIHEMOPHILIC COAGULATION FACTOR VIIA (RECOMBINANT) 5 MG VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Eptacog_alfa" target="_blank" class="text-indigo-600 hover:text-indigo-900">NovoSeven</a>`],
+            ["ANTIHEMOPHILIC FACTOR IX (RECOMBINANT LONG ACTING) POWDER FOR SOLINJECTION 250 IU VIAL", " ", " ", "Additional alternative required", "N/A"],
+            ["ANTIHEMOPHILIC FACTOR VIII (RECOMBINANT,LONG ACTING) POWDER FOR SOL INJ. 1000 IU VIAL.", " ", " ", "Additional alternative required", "N/A"],
+            ["ANTIHEMOPHILIC FACTOR VIII (RECOMBINANT,LONG ACTING) POWDER FOR SOL INJ. 500 IU VIAL.", " ", " ", "Additional alternative required", "N/A"],
+            ["ANTI-INHIBITOR COAGULANT COMPLEX, 500 U", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Anti-inhibitor_coagulant_complex" target="_blank" class="text-indigo-600 hover:text-indigo-900">Feiba</a>`],
+            ["ANTITHROMBIN III CONCENTRATE 500U INJECTION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Antithrombin_III" target="_blank" class="text-indigo-600 hover:text-indigo-900">Thrombate III</a>`],
+            ["ARIPIPRAZOLE 400 MG INJECTION: POWDER FOR, VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Aripiprazole" target="_blank" class="text-indigo-600 hover:text-indigo-900">Abilify</a>`],
+            ["ARTEMETHER 20 MG/ML INJECTION, 1 ML AMPOULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Artemether" target="_blank" class="text-indigo-600 hover:text-indigo-900">Artenam</a>`],
+            ["ASPARAGINASE (ERWINIA) POWDER FOR INJECTION 10000 U/VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Asparaginase" target="_blank" class="text-indigo-600 hover:text-indigo-900">Erwinaze</a>`],
+            ["ATEZOLIZUMAB 60 MG/ML SOLUTION FOR INFUSION (20ML) VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Atezolizumab" target="_blank" class="text-indigo-600 hover:text-indigo-900">Tecentriq</a>`],
+            ["ATROPINE + PRALIDOXIME CHLORIDE AUTOJECTOR PARENTERAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Atropine/pralidoxime" target="_blank" class="text-indigo-600 hover:text-indigo-900">ATNAA</a>`],
+            ["ATROPINE SULFATE 1 MG/10 ML INJECTION, 10 ML SYRINGE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Atropine" target="_blank" class="text-indigo-600 hover:text-indigo-900">AtroPen</a>`],
+            ["ATROPINE SULFATE 2 MG AUTOINJECTOR", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Atropine" target="_blank" class="text-indigo-600 hover:text-indigo-900">AtroPen</a>`],
+            ["ATROPINE SULFATE 500 MICROGRAM/5 ML INJECTION, 5 ML SYRINGE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Atropine" target="_blank" class="text-indigo-600 hover:text-indigo-900">AtroPen</a>`],
+            ["AZATHIOPRINE 50 MG TABLET", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Azathioprine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Imuran</a>`],
+            ["AZATHIOPRINE 50MG INJ", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Azathioprine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Imuran</a>`],
+            ["BASILIXIMAB 20 MG INJECTION: POWDER FOR, VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Basiliximab" target="_blank" class="text-indigo-600 hover:text-indigo-900">Simulect</a>`],
+            ["BCG VACCINE HEAT STABLE FREEZE DRIED BCG VACCINE PREPARED FROM A STRAIN DERIVED FROM THE BACILLUS CALMETTE AND GUERIN MULTIDOSE (10- 20 DOSES )", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/BCG_vaccine" target="_blank" class="text-indigo-600 hover:text-indigo-900">BCG Vaccine</a>`],
+            ["BEDAQUILINE 100 MG TABLET", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Bedaquiline" target="_blank" class="text-indigo-600 hover:text-indigo-900">Sirturo</a>`],
+            ["BENRALIZUMAB SC INJECTION PREFILLED SYRINGE 30MG/ML", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Benralizumab" target="_blank" class="text-indigo-600 hover:text-indigo-900">Fasenra</a>`],
+            ["BENZATROPINE MESILATE 2 MG/2 ML INJECTION, 2 ML AMPOULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Benzatropine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Cogentin</a>`],
+            ["BENZHEXOL HCL (TRIHEXYPHENIDYL) 2MG TABLET", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Trihexyphenidyl" target="_blank" class="text-indigo-600 hover:text-indigo-900">Artane</a>`],
+            ["BENZHEXOL HCL (TRIHEXYPHENIDYL) 5MG TABLET", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Trihexyphenidyl" target="_blank" class="text-indigo-600 hover:text-indigo-900">Artane</a>`],
+            ["BENZYLPENICILLIN 600 MG (1 MILLION INTERNATIONAL UNITS) INJECTION: POWDER FOR, VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Benzylpenicillin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Penicillin G</a>`],
+            ["BERACTANT 200 MG/8 ML INTRATRACHEAL SUSPENSION, 8 ML VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Beractant" target="_blank" class="text-indigo-600 hover:text-indigo-900">Survanta</a>`],
+            ["BIVALIRUDIN 250 MG INJECTION: POWDER FOR, VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Bivalirudin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Angiomax</a>`],
+            ["BLINATUMOMAB 35MCG INJECTION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Blinatumomab" target="_blank" class="text-indigo-600 hover:text-indigo-900">Blincyto</a>`],
+            ["BRENTUXIMAB 50MG INJECTION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Brentuximab_vedotin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Adcetris</a>`],
+            ["BROMOCRIPTINE 2.5 MG TABLET", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Bromocriptine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Parlodel</a>`],
+            ["BUROSUMAB-TWZA 20 MG/ML INJECTION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Burosumab" target="_blank" class="text-indigo-600 hover:text-indigo-900">Crysvita</a>`],
+            ["BUROSUMAB-TWZA 30 MG/ML INJECTION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Burosumab" target="_blank" class="text-indigo-600 hover:text-indigo-900">Crysvita</a>`],
+            ["CAFFEINE CITRATE 10 MG/ML INJECTION, 1 ML AMPOULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Caffeine_citrate" target="_blank" class="text-indigo-600 hover:text-indigo-900">Cafcit</a>`],
+            ["CALCIUM CHLORIDE DIHYDRATE 10% (1 G/10 ML, 6.8 MMOL/10 ML CALCIUM) INJECTION, 10 ML SYRINGE", " ", " ", "Additional alternative required", "N/A"],
+            ["CALCIUM CHLORIDE DIHYDRATE 10% (1 G/10 ML, 6.8 MMOL/10 ML CALCIUM) INJECTION, 10 ML VIAL OR AMPOULE", " ", " ", "Additional alternative required", "N/A"],
+            ["CALCIUM GLUCONATE 2.5% TOPICAL GEL", " ", " ", "Additional alternative required", "N/A"],
+            ["CALCIUM GLUCONATE MONOHYDRATE 10% (1 G/10 ML, 2.2 MMOL/10 ML) INJECTION 10 ML AMPOULE", " ", " ", "Additional alternative required", "N/A"],
+            ["CALCIUM POLYSTYRENE SULFONATE 999.3 MG/G POWDER", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Polystyrene_sulfonate" target="_blank" class="text-indigo-600 hover:text-indigo-900">Kalimate</a>`],
+            ["CALFACTANT 35 MG/ML SUSPENSION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Calfactant" target="_blank" class="text-indigo-600 hover:text-indigo-900">Infasurf</a>`],
+            ["CANAKINUMAB 150MG", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Canakinumab" target="_blank" class="text-indigo-600 hover:text-indigo-900">Ilaris</a>`],
+            ["CARBETOCIN 100 MICROGRAM/ML INJECTION, 1 ML AMPOULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Carbetocin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Duratocin</a>`],
+            ["CARBIDOPA 5MG, LEVODOPA 20MG/ML 100ML INTESTINAL GEL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Carbidopa/levodopa" target="_blank" class="text-indigo-600 hover:text-indigo-900">Duopa</a>`],
+            ["CARBOPROST 250 MICROGRAM/ML INJECTION, 1 ML AMPOULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Carboprost" target="_blank" class="text-indigo-600 hover:text-indigo-900">Hemabate</a>`],
+            ["CARDIOPLEGIC SOLUTION 1000ML BOTTLE OR BAG", " ", " ", "Additional alternative required", "N/A"],
+            ["CARGLUMIC ACID 100MG/ML (50 ML) ORAL SUSPENSION BOTTLE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Carglumic_acid" target="_blank" class="text-indigo-600 hover:text-indigo-900">Carbaglu</a>`],
+            ["CEFTAZIDIME 2G, AVIBACTAM 0.5G INJECTION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Ceftazidime/avibactam" target="_blank" class="text-indigo-600 hover:text-indigo-900">Avycaz</a>`],
+            ["CEFTOLOZANE 1GM + TAZOBACTAM 0.5 GM VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Ceftolozane/tazobactam" target="_blank" class="text-indigo-600 hover:text-indigo-900">Zerbaxa</a>`],
+            ["CICLOSPORIN 100 MG/ML ORAL LIQUID", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Ciclosporin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Sandimmune</a>`],
+            ["CICLOSPORIN 250 MG/5 ML INJECTION: CONCENTRATED, 5 ML AMPOULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Ciclosporin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Sandimmune</a>`],
+            ["CLADRIBINE 10MG/10ML INJECTION (PRES.FREE)", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Cladribine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Mavenclad</a>`],
+            ["CLOBAZAM 2 MG/ ML ORAL SUSPENSION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Clobazam" target="_blank" class="text-indigo-600 hover:text-indigo-900">Onfi</a>`],
+            ["CORTICORELIN 100 MCG INJECTION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Corticorelin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Acthrel</a>`],
+            ["CUSTODIOL HTK (HISTIDINE, TRYPOTOPHAN, KETOGLUTARATE) 1000 ML SOLUTION", " ", " ", "Additional alternative required", "N/A"],
+            ["CYSTEAMINE 3.8MG/ML EYE DROPS", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Cysteamine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Cystaran</a>`],
+            ["DANTROLENE SODIUM 20 MG INJECTION: POWDER FOR, VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Dantrolene" target="_blank" class="text-indigo-600 hover:text-indigo-900">Dantrium</a>`],
+            ["DARATUMUMAB 120 MG/ML SUBQ INJECTION, 15 ML PREFILLED SYRINGE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Daratumumab" target="_blank" class="text-indigo-600 hover:text-indigo-900">Darzalex</a>`],
+            ["DARUNAVIR 800 MG + COBICISTAT 150 MG TABLET", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Darunavir/cobicistat" target="_blank" class="text-indigo-600 hover:text-indigo-900">Prezcobix</a>`],
+            ["DEFEROXAMINE MESILATE 500 MG INJECTION: POWDER FOR, VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Deferoxamine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Desferal</a>`],
+            ["DENOSUMAB 120 MG/1.7 ML INJECTION 1.7 ML VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Denosumab" target="_blank" class="text-indigo-600 hover:text-indigo-900">Xgeva</a>`],
+            ["DESFLURANE FOR INHALATION ANESTHETIC GAS 240ML/BOTTLE , THE REQUIRED DEVICES TO BE SUPPLIED FREE OF CHARGE WITH MAINTENANCE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Desflurane" target="_blank" class="text-indigo-600 hover:text-indigo-900">Suprane</a>`],
+            ["DEXTROSE 50% INTRAVENOUS INFUSION 50 ML VIAL", " ", " ", "Additional alternative required", "N/A"],
+            ["DIAZEPAM 5 MG/ML INJECTION 2 ML AMPOULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Diazepam" target="_blank" class="text-indigo-600 hover:text-indigo-900">Valium</a>`],
+            ["DICOBALT EDETATE 15 MG/ML INJECTION 20 ML VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Dicobalt_edetate" target="_blank" class="text-indigo-600 hover:text-indigo-900">Kelocyanor</a>`],
+            ["DIMERCAPROL 5% (100 MG/2 ML) INJECTION, 2 ML AMPOULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Dimercaprol" target="_blank" class="text-indigo-600 hover:text-indigo-900">British Anti-Lewisite</a>`],
+            ["DOBUTAMINE 500 MG/250 ML + DEXTROSE 5% INJECTION: INTRAVENOUS INFUSION, 250 ML BAG", " ", " ", "Additional alternative required", "N/A"],
+            ["DOLUTEGRAVIR 50 MG TABLET", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Dolutegravir" target="_blank" class="text-indigo-600 hover:text-indigo-900">Tivicay</a>`],
+            ["DORNASE ALPHA SOLUTION FOR NEB 1MG/ML ( 2.5MG/2.5ML) AMPOULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Dornase_alfa" target="_blank" class="text-indigo-600 hover:text-indigo-900">Pulmozyme</a>`],
+            ["DOXAPRAM HCL INJECTION 20MG/ML", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Doxapram" target="_blank" class="text-indigo-600 hover:text-indigo-900">Dopram</a>`],
+            ["DOXYCYCLINE HYCLATE 100MG INJECTION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Doxycycline" target="_blank" class="text-indigo-600 hover:text-indigo-900">Vibramycin</a>`],
+            ["ELOSULFASE ALFA 5 MG/5 ML INJECTION: CONCENTRATED, 5 ML VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Elosulfase_alfa" target="_blank" class="text-indigo-600 hover:text-indigo-900">Vimizim</a>`],
+            ["EMICIZUMAB SOLUTION FOR INFUSION SINGLE DOSE VIAL  150MG/ML", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Emicizumab" target="_blank" class="text-indigo-600 hover:text-indigo-900">Hemlibra</a>`],
+            ["EMICIZUMAB SOLUTION FOR INFUSION SINGLE DOSE VIAL  60MG/0.4 ML", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Emicizumab" target="_blank" class="text-indigo-600 hover:text-indigo-900">Hemlibra</a>`],
+            ["EMICIZUMAB SOLUTION FOR INFUSION SINGLE DOSE VIAL 105MG/0.7 ML", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Emicizumab" target="_blank" class="text-indigo-600 hover:text-indigo-900">Hemlibra</a>`],
+            ["EMICIZUMAB SOLUTION FOR INFUSION SINGLE DOSE VIAL 30MG/ML", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Emicizumab" target="_blank" class="text-indigo-600 hover:text-indigo-900">Hemlibra</a>`],
+            ["EMTRICITABINE 200 MG + TENOFOVIR ALAFENAMIDE 25 MG TABLET", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Emtricitabine/tenofovir_alafenamide" target="_blank" class="text-indigo-600 hover:text-indigo-900">Descovy</a>`],
+            ["EPINEPHRINE (ADRENALINE) 1 IN 10 000 (1 MG/10 ML) INJECTION, 10 ML SYRINGE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Epinephrine_(medication)" target="_blank" class="text-indigo-600 hover:text-indigo-900">Adrenalin</a>`],
+            ["EPINEPHRINE (ADRENALINE) 1 IN 1000 (150 MICROGRAM/0.15 ML) INJECTION, 0.15 ML PREFILLED PEN", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Epinephrine_autoinjector" target="_blank" class="text-indigo-600 hover:text-indigo-900">EpiPen Jr</a>`],
+            ["EPINEPHRINE (ADRENALINE) 1 IN 1000 (300 MICROGRAM/0.3 ML) INJECTION, 0.3 ML PREFILLED PEN", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Epinephrine_autoinjector" target="_blank" class="text-indigo-600 hover:text-indigo-900">EpiPen</a>`],
+            ["ERIBULIN 1MG/2ML IV INJECTION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Eribulin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Halaven</a>`],
+            ["ESKETAMINE  28 MG", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Esketamine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Spravato</a>`],
+            ["ESTROGEN CONJUGATED 25MG /IV", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Conjugated_estrogens" target="_blank" class="text-indigo-600 hover:text-indigo-900">Premarin</a>`],
+            ["ETHAMBUTOL HYDROCHLORIDE 400 MG TABLET", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Ethambutol" target="_blank" class="text-indigo-600 hover:text-indigo-900">Myambutol</a>`],
+            ["ETHYL ALCOHOL (DEHYDRATED ALCOHOL) ABSOLUTE INJECTION", " ", " ", "Additional alternative required", "N/A"],
+            ["EVOLOCUMAB 140MG/ML INJECTION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Evolocumab" target="_blank" class="text-indigo-600 hover:text-indigo-900">Repatha</a>`],
+            ["FACTOR XIII CONCENTRATE (HUMAN) 1250 IU POWDER FOR INJECTION PARENTERAL20ML", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Factor_XIII" target="_blank" class="text-indigo-600 hover:text-indigo-900">Corifact</a>`],
+            ["FAT EMULSION 20% SOY BEAN, MEDIUM CHAIN TRIGLYCERIDES, OLIVE OIL, FISH OIL 500ML BOTTLE", " ", " ", "Additional alternative required", "N/A"],
+            ["FIBRIN SEALANT DISPOSABLE KIT 2ML", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Fibrin_sealant" target="_blank" class="text-indigo-600 hover:text-indigo-900">Tisseel</a>`],
+            ["FLUDARABINE PHOSPHATE 50 MG/2 ML INJECTION: CONCENTRATED, 2 ML VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Fludarabine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Fludara</a>`],
+            ["FOMEPIZOLE 1.5 G/1.5 ML INJECTION: INTRAVENOUS INFUSION, 1.5 ML VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Fomepizole" target="_blank" class="text-indigo-600 hover:text-indigo-900">Antizol</a>`],
+            ["GABAPENTIN 50 MG/ML SOLUTION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Gabapentin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Neurontin</a>`],
+            ["GALSULFASE 5 MG/5 ML INJECTION: CONCENTRATED, 5 ML VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Galsulfase" target="_blank" class="text-indigo-600 hover:text-indigo-900">Naglazyme</a>`],
+            ["GANCICLOVIR 500 MG INJECTION: POWDER FOR, VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Ganciclovir" target="_blank" class="text-indigo-600 hover:text-indigo-900">Cytovene</a>`],
+            ["GENTAMICIN 20 MG/2 ML INJECTION 2 ML AMPOULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Gentamicin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Garamycin</a>`],
+            ["GENTAMICIN 80 MG/2 ML INJECTION, 2 ML AMPOULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Gentamicin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Garamycin</a>`],
+            ["GLUCAGON HYDROCHLORIDE 1 MG INJECTION: POWDER FOR, VIAL + DILUENT SYRINGE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Glucagon_(medication)" target="_blank" class="text-indigo-600 hover:text-indigo-900">GlucaGen</a>`],
+            ["GLUCARPIDASE 1000 UNITS POWDER FOR SOLUTION FOR INJECTION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Glucarpidase" target="_blank" class="text-indigo-600 hover:text-indigo-900">Voraxaze</a>`],
+            ["GLUTAMINE ALANINE 20G/100ML BOTTLE", " ", " ", "Additional alternative required", "N/A"],
+            ["GONADORELIN 100 MICROGRAM INJECTION: POWDER FOR, VIAL + DILUENT", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Gonadorelin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Factrel</a>`],
+            ["GOSERELIN 10.8MG INJECTION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Goserelin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Zoladex</a>`],
+            ["GOSERELIN 3.6 MG IMPLANT, 3.6 MG SYRINGE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Goserelin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Zoladex</a>`],
+            ["HALOPERIDOL (AS DECANOATE) 50 MG/ML INJECTION: MODIFIED RELEASE, 1 ML AMPOULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Haloperidol_decanoate" target="_blank" class="text-indigo-600 hover:text-indigo-900">Haldol Decanoate</a>`],
+            ["HALOPERIDOL 5 MG/ML INJECTION, 1 ML AMPOULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Haloperidol" target="_blank" class="text-indigo-600 hover:text-indigo-900">Haldol</a>`],
+            ["HEPATITIS A VACCINE FOR CHILDREN SINGLE DOSE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Hepatitis_A_vaccine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Havrix</a>`],
+            ["HEPATITIS A VACCINES FOR ADULTS AND ADOLESCENT SINGLE DOSE VIAL OR PREFILLED SYRINGE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Hepatitis_A_vaccine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Havrix</a>`],
+            ["HEPATITIS B IMMUNOGLOBULIN 200 IU TO 250 IU INJECTION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Hepatitis_B_immune_globulin" target="_blank" class="text-indigo-600 hover:text-indigo-900">HyperHEP B</a>`],
+            ["HEPTAVALENT BOTULINUM ANTITOXIN 20 ML VIAL", " ", " ", "Additional alternative required", "N/A"],
+            ["HUMAN FIBRINOGEN 2 G INFUSION: POWDER FOR, VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Fibrinogen_concentrate" target="_blank" class="text-indigo-600 hover:text-indigo-900">RiaSTAP</a>`],
+            ["HYALURONIDASE 1 500 INTERNATIONAL UNITS INJECTION: POWDER FOR, AMPOULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Hyaluronidase" target="_blank" class="text-indigo-600 hover:text-indigo-900">Vitrase</a>`],
+            ["HYDROMORPHONE 1MG/ML ORAL SOLUTION 450 TO 500ML BOTTLE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Hydromorphone" target="_blank" class="text-indigo-600 hover:text-indigo-900">Dilaudid</a>`],
+            ["HYDROXOCOBALAMIN (VITAMIN B12) 1000 MICROGRAM/ ML INJECTION, 30 ML VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Hydroxocobalamin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Cyanokit</a>`],
+            ["HYDROXYCARBAMIDE 100MG/ML (150ML) SUSPENSION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Hydroxycarbamide" target="_blank" class="text-indigo-600 hover:text-indigo-900">Hydrea</a>`],
+            ["IBUPROFEN LYSINE 10 MG/ML SOLUTION FOR INJECTION, 2 ML USED FOR PATENT DUCTUS ARTERIOSUS FOR PEDIATRIC", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Ibuprofen" target="_blank" class="text-indigo-600 hover:text-indigo-900">NeoProfen</a>`],
+            ["IDARUBICIN 10MG INJECTION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Idarubicin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Idamycin</a>`],
+            ["IDURSULFASE 6 MG/3 ML INJECTION: CONCENTRATED, 3 ML VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Idursulfase" target="_blank" class="text-indigo-600 hover:text-indigo-900">Elaprase</a>`],
+            ["IG DIGOXIN IMMUNE FAB (ANTIDIGOXIN FAB FRAGMENTS) FOR INJECTION 40 MG/VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Digoxin_immune_fab" target="_blank" class="text-indigo-600 hover:text-indigo-900">DigiFab</a>`],
+            ["IG IMMUNOGLOBULIN ANTI HUMAN T-LYMPHOCYTE IMMUNOGLOBULIN (ATG) (RABBIT) 25 MG INJECTION (THYMOGLOBULIN)/ ANTI- THYMOGLOBULIN FOR INJ ECTION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Anti-thymocyte_globulin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Thymoglobulin</a>`],
+            ["IG IMMUNOGLOBULIN ANTI-RHO (D) INJECTION (200-300 MCG)", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Rho(D)_immune_globulin" target="_blank" class="text-indigo-600 hover:text-indigo-900">RhoGAM</a>`],
+            ["IG IMMUNOGLOBULIN HUMAN NORMAL 5 % IV INJECTION 2.5 GM/50 ML VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Intravenous_immunoglobulin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Gamunex</a>`],
+            ["INACTIVATED POLIO VACCINE (IPV) 0.5 ML INJECTION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Polio_vaccine" target="_blank" class="text-indigo-600 hover:text-indigo-900">IPOL</a>`],
+            ["INSULIN ASPART 30 INTERNATIONAL UNITS/ML + INSULIN ASPART PROTAMINE 70 INTERNATIONAL UNITS/ML INJECTION, 3 ML PREFILLED PEN", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Insulin_aspart" target="_blank" class="text-indigo-600 hover:text-indigo-900">NovoLog Mix 70/30</a>`],
+            ["INSULIN GLARGINE 300 INTERNATIONAL UNITS/ML INJECTION, 1.5 ML PREFILLED PEN", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Insulin_glargine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Toujeo</a>`],
+            ["INSULIN GLULISINE 100 INTERNATIONAL UNITS/ML INJECTION, 3 ML PREFILLED PEN", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Insulin_glulisine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Apidra</a>`],
+            ["INSULIN HUMAN NPH ISOPHANE 100/ML PENFILL - 15 NEEDLES FREE FOR EACH PEN ( FREE PEN FOR EVERY 25 TO 50 CARTRIDGES)", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/NPH_insulin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Humulin N</a>`],
+            ["INSULIN HUMAN REGULAR 100 UNITS/ML PENFILL INJECTION CARTRIDGE - 15 NEEDLES FREE FOR EACH PEN ( FREE PEN FOR EVERY 25 TO 50 CARTRIDG ES)", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Regular_insulin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Humulin R</a>`],
+            ["INSULIN LISPRO 25 INTERNATIONAL UNITS/ML + INSULIN LISPRO PROTAMINE 75 INTERNATIONAL UNITS/ML INJECTION, 3 ML PREFILLED PEN", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Insulin_lispro" target="_blank" class="text-indigo-600 hover:text-indigo-900">Humalog Mix 75/25</a>`],
+            ["INSULIN LISPRO 50 INTERNATIONAL UNITS/ML + INSULIN LISPRO PROTAMINE 50 INTERNATIONAL UNITS/ML INJECTION, 3 ML PREFILLED PEN", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Insulin_lispro" target="_blank" class="text-indigo-600 hover:text-indigo-900">Humalog Mix 50/50</a>`],
+            ["INSULIN NEUTRAL HUMAN 30 INTERNATIONAL UNITS/ML + INSULIN ISOPHANE HUMAN 70 INTERNATIONAL UNITS/ML INJECTION, 10 ML VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/NPH_insulin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Humulin 70/30</a>`],
+            ["INSULINE DEGLUDEC 100UNIT/ML INJECTION PEN", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Insulin_degludec" target="_blank" class="text-indigo-600 hover:text-indigo-900">Tresiba</a>`],
+            ["ISAVUCONAZONIUM SULFATE 186.3MG (ISAVUCONAZOLE 100MG) CAPSULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Isavuconazole" target="_blank" class="text-indigo-600 hover:text-indigo-900">Cresemba</a>`],
+            ["ISOLEUCINE 50 MG POWDER ORAL", " ", " ", "Additional alternative required", "N/A"],
+            ["ISONIAZID 100 MG TABLET", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Isoniazid" target="_blank" class="text-indigo-600 hover:text-indigo-900">Nydrazid</a>`],
+            ["ISOPRENALINE HYDROCHLORIDE 1 IN 5000 (200 MICROGRAM/ML) INJECTION: CONCENTRATED, 1 ML AMPOULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Isoprenaline" target="_blank" class="text-indigo-600 hover:text-indigo-900">Isuprel</a>`],
+            ["IXAZOMIB 3 MG CAPSULE ORAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Ixazomib" target="_blank" class="text-indigo-600 hover:text-indigo-900">Ninlaro</a>`],
+            ["IXEKIZUMAB 80 MG/ML INJECTION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Ixekizumab" target="_blank" class="text-indigo-600 hover:text-indigo-900">Taltz</a>`],
+            ["LAMIVUDINE 50 MG/5ML SYRUP ORAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Lamivudine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Epivir</a>`],
+            ["LAPATINIB 250 MG TABLET", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Lapatinib" target="_blank" class="text-indigo-600 hover:text-indigo-900">Tykerb</a>`],
+            ["LARONIDASE 2.9 MG/5 ML INJECTION: INTRAVENOUS INFUSION, 5 ML VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Laronidase" target="_blank" class="text-indigo-600 hover:text-indigo-900">Aldurazyme</a>`],
+            ["L-CARNITINE 200 MG/ML INJECTION SOLUTION (5-12.5 ML)", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Carnitine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Carnitor</a>`],
+            ["L-CARNITINE 300 MG/ML ORAL SOLUTION (20 ML)", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Carnitine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Carnitor</a>`],
+            ["LEUPRORELIN ACETATE 3.75 MG INJECTION: MODIFIED RELEASE, SYRINGE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Leuprorelin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Lupron</a>`],
+            ["LEUPRORELIN ACETATE 7.5 MG FOR INJECTION PARENTERAL MODIFIED RELEASE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Leuprorelin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Lupron</a>`],
+            ["LITHIUM CARBONATE 300 MG CAPSULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Lithium_(medication)" target="_blank" class="text-indigo-600 hover:text-indigo-900">Eskalith</a>`],
+            ["LOMITAPIDE 10 MG CAPSULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Lomitapide" target="_blank" class="text-indigo-600 hover:text-indigo-900">Juxtapid</a>`],
+            ["LOMITAPIDE 20 MG CAPSULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Lomitapide" target="_blank" class="text-indigo-600 hover:text-indigo-900">Juxtapid</a>`],
+            ["LOMITAPIDE 5 MG CAPSULE ORAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Lomitapide" target="_blank" class="text-indigo-600 hover:text-indigo-900">Juxtapid</a>`],
+            ["LOPINAVIR 100 MG + RITONAVIR 25 MG TABLET", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Lopinavir/ritonavir" target="_blank" class="text-indigo-600 hover:text-indigo-900">Kaletra</a>`],
+            ["LORAZEPAM 2 MG/ ML 1ML (AMPOULE/VIAL)", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Lorazepam" target="_blank" class="text-indigo-600 hover:text-indigo-900">Ativan</a>`],
+            ["MAGNESIUM SULPHATE 50% INJECTION, 5 ML TO 10 ML AMPOULE", " ", " ", "Additional alternative required", "N/A"],
+            ["MAPROTILINE HYDROCHLORIDE 25 MG TABLET", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Maprotiline" target="_blank" class="text-indigo-600 hover:text-indigo-900">Ludiomil</a>`],
+            ["MECASERMIN 40MG INJECTION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Mecasermin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Increlex</a>`],
+            ["MEFLOQUINE 250 MG TABLET", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Mefloquine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Lariam</a>`],
+            ["MEGESTROL ACETATE 160MG TAB", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Megestrol_acetate" target="_blank" class="text-indigo-600 hover:text-indigo-900">Megace</a>`],
+            ["MEGESTROL ACETATE, 40MG, SCORED TABLET, ORAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Megestrol_acetate" target="_blank" class="text-indigo-600 hover:text-indigo-900">Megace</a>`],
+            ["MELPHALAN 50 MG INJECTION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Melphalan" target="_blank" class="text-indigo-600 hover:text-indigo-900">Alkeran</a>`],
+            ["MESNA 400 MG/4 ML INJECTION: CONCENTRATED, 4 ML AMPOULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Mesna" target="_blank" class="text-indigo-600 hover:text-indigo-900">Mesnex</a>`],
+            ["METHADONE 10MG TABLET", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Methadone" target="_blank" class="text-indigo-600 hover:text-indigo-900">Dolophine</a>`],
+            ["METHYLTHIONINIUM CHLORIDE 1% (10 MG/ML) INJECTION, 1 ML AMPOULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Methylene_blue" target="_blank" class="text-indigo-600 hover:text-indigo-900">Urolene Blue</a>`],
+            ["MILRINONE 1MG/ML 10ML VIAL OR AMP", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Milrinone" target="_blank" class="text-indigo-600 hover:text-indigo-900">Primacor</a>`],
+            ["MORPHINE SULPHATE 10MG IMMEDIATE RELEASE TABLET", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Morphine" target="_blank" class="text-indigo-600 hover:text-indigo-900">MSIR</a>`],
+            ["MORPHINE SULPHATE 10MG SUSTAINED RELEASE TABLET", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Morphine" target="_blank" class="text-indigo-600 hover:text-indigo-900">MS Contin</a>`],
+            ["MORPHINE SULPHATE 10MG/5ML ORAL SOLUTION 100ML BOTTLE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Morphine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Roxanol</a>`],
+            ["MORPHINE SULPHATE 30 MG SUSTAINED RELEASE TABLET", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Morphine" target="_blank" class="text-indigo-600 hover:text-indigo-900">MS Contin</a>`],
+            ["MORPHINE SULPHATE INJECTION 10MG/ML", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Morphine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Duramorph</a>`],
+            ["MULTIPLE ELECTROLYTES INJECTION 1000 ML PLASMALYTE", " ", " ", "Additional alternative required", "N/A"],
+            ["MULTIVITAMIN INJECTION FOR PEDIATRICS WITHOUT VITAMIN K 10ML", " ", " ", "Additional alternative required", "N/A"],
+            ["MULTIVITAMINS (LIPID AND WATER SOLUBLE) FOR ADULT INJECTION FOR TPN", " ", " ", "Additional alternative required", "N/A"],
+            ["MULTIVITAMINS (LIPID SOLUBLE) FOR PEDIATRIC 10 ML FOR TPN", " ", " ", "Additional alternative required", "N/A"],
+            ["MULTIVITAMINS (WATER SOLUBLE) FOR PEDIATRIC 10 ML FOR TPN", " ", " ", "Additional alternative required", "N/A"],
+            ["NALOXONE HYDROCHLORIDE 40 MICROGRAM/2 ML INJECTION, 2 ML AMPOULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Naloxone" target="_blank" class="text-indigo-600 hover:text-indigo-900">Narcan</a>`],
+            ["NALOXONE HYDROCHLORIDE 400 MICROGRAM/ML INJECTION, 1 ML AMPOULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Naloxone" target="_blank" class="text-indigo-600 hover:text-indigo-900">Narcan</a>`],
+            ["NATALIZUMAB 300 MG/15 ML INJECTION: CONCENTRATED, 15 ML VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Natalizumab" target="_blank" class="text-indigo-600 hover:text-indigo-900">Tysabri</a>`],
+            ["NITISINONE 2MG CAPSULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Nitisinone" target="_blank" class="text-indigo-600 hover:text-indigo-900">Orfadin</a>`],
+            ["NITISINONE 4 MG/ML SUSPENSION 90 ML", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Nitisinone" target="_blank" class="text-indigo-600 hover:text-indigo-900">Orfadin</a>`],
+            ["NITISINONE 5MG CAPSULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Nitisinone" target="_blank" class="text-indigo-600 hover:text-indigo-900">Orfadin</a>`],
+            ["NITISINONE CAP 10MG", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Nitisinone" target="_blank" class="text-indigo-600 hover:text-indigo-900">Orfadin</a>`],
+            ["NITROGLYCERIN TRANSDERMAL PATCHES (10 MG / 24 HOURS)", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Nitroglycerin_(drug)" target="_blank" class="text-indigo-600 hover:text-indigo-900">Nitro-Dur</a>`],
+            ["NIVOLUMAB 100MG/10 ML INJ", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Nivolumab" target="_blank" class="text-indigo-600 hover:text-indigo-900">Opdivo</a>`],
+            ["NUSINERSEN 12MG/5ML VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Nusinersen" target="_blank" class="text-indigo-600 hover:text-indigo-900">Spinraza</a>`],
+            ["OCRELIZUMAB 300MG/10ML", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Ocrelizumab" target="_blank" class="text-indigo-600 hover:text-indigo-900">Ocrevus</a>`],
+            ["OCTREOTIDE LAR-DEPOT INJ 30MG", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Octreotide" target="_blank" class="text-indigo-600 hover:text-indigo-900">Sandostatin</a>`],
+            ["OLANZAPINE 10 MG INJECTION: POWDER FOR, VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Olanzapine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Zyprexa</a>`],
+            ["ONASEMNOGENE ABEPARVOVEC 2 X10 EXP 13 VECTOR GENOMES/ML SOLUTION FOR INJECTION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Onasemnogene_abeparvovec" target="_blank" class="text-indigo-600 hover:text-indigo-900">Zolgensma</a>`],
+            ["ORAL REHYDRATION SALTS ORAL LIQUID: POWDER FOR, 20.5 G SACHET", " ", " ", "Additional alternative required", "N/A"],
+            ["OXCARBAZEPINE 300 MG/5 ML SUSPENSION, ORAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Oxcarbazepine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Trileptal</a>`],
+            ["PALIPERIDONE 150 MG/1.5 ML INJECTION: MODIFIED RELEASE, 1.5 ML SYRINGE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Paliperidone" target="_blank" class="text-indigo-600 hover:text-indigo-900">Invega</a>`],
+            ["PALIVIZUMAB 100 MG INJECTION: POWDER FOR, VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Palivizumab" target="_blank" class="text-indigo-600 hover:text-indigo-900">Synagis</a>`],
+            ["PANITUMUMAB 20MG/ML (5ML)", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Panitumumab" target="_blank" class="text-indigo-600 hover:text-indigo-900">Vectibix</a>`],
+            ["PAPAVERINE HYDROCHLORIDE 300 MG/10 ML INJECTION, 10 ML AMPOULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Papaverine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Papaverine</a>`],
+            ["PARICALCITOL 1 MICROGRAM CAPSULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Paricalcitol" target="_blank" class="text-indigo-600 hover:text-indigo-900">Zemplar</a>`],
+            ["PEGVALIASE 10MG/0.5ML PREFILLED SYRINGE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Pegvaliase" target="_blank" class="text-indigo-600 hover:text-indigo-900">Palynziq</a>`],
+            ["PEGVALIASE PREFILLED SYRINGE 2.5MG/0.5ML", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Pegvaliase" target="_blank" class="text-indigo-600 hover:text-indigo-900">Palynziq</a>`],
+            ["PEGVALIASE PRE-FILLED SYRINGE 20MG/ML", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Pegvaliase" target="_blank" class="text-indigo-600 hover:text-indigo-900">Palynziq</a>`],
+            ["PEMBROLIZUMAB 25MG/ML (4ML) VIAL INJECTION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Pembrolizumab" target="_blank" class="text-indigo-600 hover:text-indigo-900">Keytruda</a>`],
+            ["PENICILLAMINE 250 MG CAPSULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Penicillamine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Cuprimine</a>`],
+            ["PENTETATE CALCIUM TRISODIUM INJECTION 1000 MG CALCIUM DTPA", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Calcium_trisodium_pentetate" target="_blank" class="text-indigo-600 hover:text-indigo-900">Ca-DTPA</a>`],
+            ["PERTUZUMAB 420MG/14ML INJECTION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Pertuzumab" target="_blank" class="text-indigo-600 hover:text-indigo-900">Perjeta</a>`],
+            ["PHENOBARBITAL 15 MG/5ML SYRUP 100 TO 200 ML", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Phenobarbital" target="_blank" class="text-indigo-600 hover:text-indigo-900">Luminal</a>`],
+            ["PHENOBARBITAL SODIUM 10 MG TABLET", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Phenobarbital" target="_blank" class="text-indigo-600 hover:text-indigo-900">Luminal</a>`],
+            ["PHENOBARBITAL SODIUM 200 MG/ML INJECTION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Phenobarbital" target="_blank" class="text-indigo-600 hover:text-indigo-900">Luminal</a>`],
+            ["PHENOBARBITAL SODIUM 60 MG/ML INJECTION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Phenobarbital" target="_blank" class="text-indigo-600 hover:text-indigo-900">Luminal</a>`],
+            ["PHENYLEPHRINE HYDROCHLORIDE 10 MG/ML INJECTION, 1 ML AMPOULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Phenylephrine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Neo-Synephrine</a>`],
+            ["PHENYTOIN ORAL SUSP 25MG/ML (125MG/5ML) 237ML BTL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Phenytoin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Dilantin</a>`],
+            ["PHENYTOIN SODIUM 100 MG CAPSULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Phenytoin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Dilantin</a>`],
+            ["PHENYTOIN SODIUM 250 MG/5 ML INJECTION, 5 ML AMPOULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Phenytoin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Dilantin</a>`],
+            ["PHENYTOIN SODIUM 50 MG CAPSULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Phenytoin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Dilantin</a>`],
+            ["PNEUMOCOCCAL 23-VAL P-SAC VAC INJECTION DISPOSABLE SYRINGE 25MCG/0.5ML PREFILLED SYRINGE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Pneumococcal_polysaccharide_vaccine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Pneumovax 23</a>`],
+            ["PONATINIB 15 MG TABLET", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Ponatinib" target="_blank" class="text-indigo-600 hover:text-indigo-900">Iclusig</a>`],
+            ["POTASSIUM CHLORIDE 1-3 MEQ/ML SYRUP", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Potassium_chloride_(medical_use)" target="_blank" class="text-indigo-600 hover:text-indigo-900">K-Tab</a>`],
+            ["POTASSIUM CHLORIDE 600 MG (8 MMOL POTASSIUM) TABLET: MODIFIED RELEASE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Potassium_chloride_(medical_use)" target="_blank" class="text-indigo-600 hover:text-indigo-900">K-Tab</a>`],
+            ["POTASSIUM IODIDE 130 MG TABLET", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Potassium_iodide" target="_blank" class="text-indigo-600 hover:text-indigo-900">ThyroSafe</a>`],
+            ["POTASSIUM IODIDE 65 MG TABLET", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Potassium_iodide" target="_blank" class="text-indigo-600 hover:text-indigo-900">ThyroSafe</a>`],
+            ["POTASSIUM PHOSPHATE 2 MMOL/ML INJECTION 10 TO 20 ML AMPOULE", " ", " ", "Additional alternative required", "N/A"],
+            ["PRALIDOXIME CHLORIDE 1 G INJECTION: POWDER FOR, VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Pralidoxime" target="_blank" class="text-indigo-600 hover:text-indigo-900">Protopam</a>`],
+            ["PRASUGREL 10 MG TABLET ORAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Prasugrel" target="_blank" class="text-indigo-600 hover:text-indigo-900">Effient</a>`],
+            ["PROCAINAMIDE HCL 100 MG/ML INJECTION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Procainamide" target="_blank" class="text-indigo-600 hover:text-indigo-900">Pronestyl</a>`],
+            ["PROTAMINE SULFATE 50 MG/5 ML INJECTION, 5 ML AMPOULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Protamine_sulfate" target="_blank" class="text-indigo-600 hover:text-indigo-900">Protamine</a>`],
+            ["PROTEIN C CONCENTRATE 500 I.U. IV VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Protein_C_concentrate" target="_blank" class="text-indigo-600 hover:text-indigo-900">Ceprotin</a>`],
+            ["PRUSSIAN BLUE INSOLUBLE 500 MG CAPSULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Prussian_blue_(medical_use)" target="_blank" class="text-indigo-600 hover:text-indigo-900">Radiogardase</a>`],
+            ["PYRAZINAMIDE 500 MG TABLET", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Pyrazinamide" target="_blank" class="text-indigo-600 hover:text-indigo-900">Pyrazinamide</a>`],
+            ["R DEFIBROTIDE 80MG/ML 2.5ML INJECTION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Defibrotide" target="_blank" class="text-indigo-600 hover:text-indigo-900">Defitelio</a>`],
+            ["RABIES VIRUS VACCINE NOT LESS THAN 2.5 IU SINGLE DOSE VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Rabies_vaccine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Imovax</a>`],
+            ["RALTEGRAVIR 600 MG TABLET", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Raltegravir" target="_blank" class="text-indigo-600 hover:text-indigo-900">Isentress</a>`],
+            ["RASBURICASE 1.5 MG INJECTION: POWDER FOR, VIAL + DILUENT", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Rasburicase" target="_blank" class="text-indigo-600 hover:text-indigo-900">Elitek</a>`],
+            ["RASBURICASE 7.5MG INJ", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Rasburicase" target="_blank" class="text-indigo-600 hover:text-indigo-900">Elitek</a>`],
+            ["RETEPLASE 10 UNITS (17.4 MG) INJECTION: POWDER FOR, VIAL + DILUENT", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Reteplase" target="_blank" class="text-indigo-600 hover:text-indigo-900">Retavase</a>`],
+            ["RIFAPENTINE 150MG TABLET", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Rifapentine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Priftin</a>`],
+            ["RISDIPLAM 60MG/80ML ORAL SOLUTION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Risdiplam" target="_blank" class="text-indigo-600 hover:text-indigo-900">Evrysdi</a>`],
+            ["RISPERIDONE 50 MG INJECTION: MODIFIED RELEASE, VIAL + DILUENT SYRINGE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Risperidone" target="_blank" class="text-indigo-600 hover:text-indigo-900">Risperdal Consta</a>`],
+            ["ROMIPLOSTIM 250MCG INJECTION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Romiplostim" target="_blank" class="text-indigo-600 hover:text-indigo-900">Nplate</a>`],
+            ["ROMOSOZUMAB-AQQG 105MG/1.17ML VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Romosozumab" target="_blank" class="text-indigo-600 hover:text-indigo-900">Evenity</a>`],
+            ["ROTAVIRUS VACCINE ( ORAL DROPS )", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Rotavirus_vaccine" target="_blank" class="text-indigo-600 hover:text-indigo-900">RotaTeq</a>`],
+            ["RUBELLA VACCINE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Rubella_vaccine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Meruvax II</a>`],
+            ["SEMAGLUTIDE 2 MG/ 1.5 ML SOLUTION FOR INJECTION 0.5 MG PREFILLED PEN", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Semaglutide" target="_blank" class="text-indigo-600 hover:text-indigo-900">Ozempic</a>`],
+            ["SEMAGLUTIDE 4 MG/ 3ML 1 MG SOLUTION FOR INJECTION IN PRE-FILLED PEN", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Semaglutide" target="_blank" class="text-indigo-600 hover:text-indigo-900">Ozempic</a>`],
+            ["SIROLIMUS 1 MG TABLET", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Sirolimus" target="_blank" class="text-indigo-600 hover:text-indigo-900">Rapamune</a>`],
+            ["SMALLPOX VACCINE (JYNNEOS)", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Smallpox_vaccine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Jynneos</a>`],
+            ["SODIUM BICARBONATE 4.2% [0.5MMOL/1ML] 10 ML SYRINGE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Sodium_bicarbonate_(medical_use)" target="_blank" class="text-indigo-600 hover:text-indigo-900">Neut</a>`],
+            ["SODIUM BICARBONATE 5% INTRAVENOUS INFUSION 250 ML BOTTLE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Sodium_bicarbonate_(medical_use)" target="_blank" class="text-indigo-600 hover:text-indigo-900">Neut</a>`],
+            ["SODIUM BICARBONATE 8.4% INJECTION 50 ML VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Sodium_bicarbonate_(medical_use)" target="_blank" class="text-indigo-600 hover:text-indigo-900">Neut</a>`],
+            ["SODIUM PHENYL ACETATE 10 % + SODIUM BENZOATE 10 % PER AMPOULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Sodium_benzoate/sodium_phenylacetate" target="_blank" class="text-indigo-600 hover:text-indigo-900">Ammonul</a>`],
+            ["SODIUM PHENYLBUTYRATE 250 MG/ML ORAL LIQUID", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Sodium_phenylbutyrate" target="_blank" class="text-indigo-600 hover:text-indigo-900">Buphenyl</a>`],
+            ["SODIUM POLYSTYRENE SULFONATE POWDER", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Polystyrene_sulfonate" target="_blank" class="text-indigo-600 hover:text-indigo-900">Kayexalate</a>`],
+            ["SODIUM THIOSULFATE 12.5G VIAL 50ML INJECTION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Sodium_thiosulfate_(medical_use)" target="_blank" class="text-indigo-600 hover:text-indigo-900">Nithiodote</a>`],
+            ["STREPTOKINASE 250 000 INTERNATIONAL UNITS INJECTION: POWDER FOR, VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Streptokinase" target="_blank" class="text-indigo-600 hover:text-indigo-900">Streptase</a>`],
+            ["STREPTOMYCIN SULFATE 1 G INJECTION: POWDER FOR, VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Streptomycin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Streptomycin</a>`],
+            ["SUCCIMER 100 MG CAPSULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Succimer" target="_blank" class="text-indigo-600 hover:text-indigo-900">Chemet</a>`],
+            ["SULFAMETHOXAZOLE 266.7 MG/3 ML + TRIMETHOPRIM 53.3 MG/3 ML INJECTION: CONCENTRATED, 3 ML AMPOULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Trimethoprim/sulfamethoxazole" target="_blank" class="text-indigo-600 hover:text-indigo-900">Bactrim</a>`],
+            ["TENOFOVIR ALAFENAMIDE 25MG TABLET", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Tenofovir_alafenamide" target="_blank" class="text-indigo-600 hover:text-indigo-900">Vemlidy</a>`],
+            ["TETANUS IMMUNOGLOBULIN, HUMAN 250 INTERNATIONAL UNITS INJECTION, VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Tetanus_immune_globulin" target="_blank" class="text-indigo-600 hover:text-indigo-900">HyperTET</a>`],
+            ["TETANUS TOXOID 10 LF/0.5 ML INJECTION, 0.5 ML AMPOULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Tetanus_vaccine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Tetanus Toxoid</a>`],
+            ["TETANUS TOXOID VACCINE 1500 INTERNATIONAL UNITS/1ML", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Tetanus_vaccine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Tetanus Toxoid</a>`],
+            ["THALIDOMIDE 100 MG TABLET", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Thalidomide" target="_blank" class="text-indigo-600 hover:text-indigo-900">Thalomid</a>`],
+            ["THALIDOMIDE 50MG TABLET", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Thalidomide" target="_blank" class="text-indigo-600 hover:text-indigo-900">Thalomid</a>`],
+            ["THYROTROPIN ALFA 0.9 MG/ML INJECTION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Thyrotropin_alfa" target="_blank" class="text-indigo-600 hover:text-indigo-900">Thyrogen</a>`],
+            ["TIROFIBAN 12.5 MG/50 ML INJECTION: CONCENTRATED, 50 ML VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Tirofiban" target="_blank" class="text-indigo-600 hover:text-indigo-900">Aggrastat</a>`],
+            ["TOPIRAMATE SPRINKLE 15 MG CAPSULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Topiramate" target="_blank" class="text-indigo-600 hover:text-indigo-900">Topamax</a>`],
+            ["TOPOTECAN HCL 4MG INJECTION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Topotecan" target="_blank" class="text-indigo-600 hover:text-indigo-900">Hycamtin</a>`],
+            ["TRACE ELEMENT FOR PEDIATRICS FOR TPN USE 5ML VIAL CONTAIN: 4-7 TRACE ELEMENTS", " ", " ", "Additional alternative required", "N/A"],
+            ["TRASTUZUMAB EMTANSINE 100MG INJECTION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Trastuzumab_emtansine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Kadcyla</a>`],
+            ["TRIPTORELIN 3.75MG PREFILLED SYRINGE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Triptorelin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Trelstar</a>`],
+            ["TYPHOID VACCINE A PARENTERAL CAPSULAR POLYSACCHARIDE VACCINE CONTAINING 25 MCG. OF THE(VI) POLYSACCHARIDE ANTIGEN", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Typhoid_vaccine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Typhim Vi</a>`],
+            ["VACCINE IMMUNOGLOBULIN SMALLPOX 50000 IU 15 ML VIAL", " ", " ", "Additional alternative required", "N/A"],
+            ["VACCINE: DIPHERIA, TETANUS, ACELLULAR PERTUSSIS (DTAP), HEPATITIS B, ENHANCED INACTIVATED POLIO (IPV)&HAEMOPHILUS INFLUENZA TYPE B V ACCINE (HIB) SINGLE DOSE 0.5ML VIAL. DIPHERIA NOT LESS THAN 30IU/DOSES, TETANUS NOT LESS THAN 40IU/DOSES, PERTUSSIS NOT LE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/DTaP-Hib-IPV-HepB_vaccine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Pediarix</a>`],
+            ["VACCINE: DIPHTHERIA, TETANUS ,ACELLULAR PERTUSSIS (TDAP), ADOLESCENT AND ADULT SINGLE DOSE 0.5ML PREFILLED SYRINGE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Tdap_vaccine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Boostrix</a>`],
+            ["VACCINE: HEPATITIS B VACCINE ( FOR ADOLESCENT AND ADULTS ) A STERILE SUSPENSION OF PURIFIED INACTIVATED HEPATITIS B SURFACE ANTIGEN, PROTEIN PRODUCED BY DNA TECHNIQUE ,THE VACCINE IS FOR I.M. OR S.C. INJECTIONS UNIT PACK: SINGLE DOSE / VIAL STORAGE: 2 - 8", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Hepatitis_B_vaccine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Engerix-B</a>`],
+            ["VACCINE: HEPATITIS B VACCINE ( FOR CHILDREN ) A STERILE SUSPension OF PURIFIED INACTIVATED HEPATITIS B SURFACE ANTIGEN, PROTEIN PRODUCED BY A RECOMBINANT DNA TECHNIQUE,THIOMERSAL FREE OR CONTAIN GREATLY REDUCED AMOUNTS LESS THAN 0.5 MCG OF MERCURY/DOSE ,T", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Hepatitis_B_vaccine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Engerix-B</a>`],
+            ["VALPROATE SODIUM 400 MG INJECTION: POWDER FOR, VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Valproate" target="_blank" class="text-indigo-600 hover:text-indigo-900">Depacon</a>`],
+            ["VARICELLA ZOSTER IMMUNOGLOBULIN 500 IU/20 ML INJECTION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Varicella_zoster_immune_globulin" target="_blank" class="text-indigo-600 hover:text-indigo-900">VariZIG</a>`],
+            ["VARICELLA ZOSTER VIRUS (CHICKEN POX VACCINE) FOR SUBCUTANEOUS INJECTION LIVE ATTENUATED VARICELLA VIRUS VACCINE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Varicella_vaccine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Varivax</a>`],
+            ["VEMURAFENIB 240MG TABLET", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Vemurafenib" target="_blank" class="text-indigo-600 hover:text-indigo-900">Zelboraf</a>`],
+            ["VINBLASTINE SULPHATE INJECTION 10MG/VIAL POWDER FOR RECONSTITUTION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Vinblastine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Velban</a>`],
+            ["VINCRISTINE 2MG INJECTION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Vincristine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Oncovin</a>`],
+            ["VINCRISTINE SULFATE 1 MG/ML INJECTION, 1 ML VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Vincristine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Oncovin</a>`],
+            ["VINORELBINE 50 MG/5 ML INJECTION: CONCENTRATED, 5 ML VIAL", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Vinorelbine" target="_blank" class="text-indigo-600 hover:text-indigo-900">Navelbine</a>`],
+            ["VITAMIN B6 (PYRIDOXINE) 100 MG/ML INJECTION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Vitamin_B6" target="_blank" class="text-indigo-600 hover:text-indigo-900">Pyridoxine</a>`],
+            ["VITAMIN B6 (PYRIDOXINE) 50 MG/ML 2 ML INJECTION", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Vitamin_B6" target="_blank" class="text-indigo-600 hover:text-indigo-900">Pyridoxine</a>`],
+            ["WARFARIN SODIUM 1 MG TABLET", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Warfarin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Coumadin</a>`],
+            ["WARFARIN SODIUM 2 MG TABLET", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Warfarin" target="_blank" class="text-indigo-600 hover:text-indigo-900">Coumadin</a>`],
+            ["ZINC GLUCONATE 1 MG/ML 10ML VIAL", " ", " ", "Additional alternative required", "N/A"],
+            ["ZONISAMIDE 100MG CAPSULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Zonisamide" target="_blank" class="text-indigo-600 hover:text-indigo-900">Zonegran</a>`],
+            ["ZONISAMIDE 50MG CAPSULE", " ", " ", "Additional alternative required", `<a href="https://en.wikipedia.org/wiki/Zonisamide" target="_blank" class="text-indigo-600 hover:text-indigo-900">Zonegran</a>`],
+            ["Fluorouracil 0.5% (5 mg/g) Cream", " ", " ", "To be registered", `<a href="https://en.wikipedia.org/wiki/Fluorouracil" target="_blank" class="text-indigo-600 hover:text-indigo-900">Efudex</a>`],
+            ["NIROGACESTAT 50mg Tablet (Ogsiveo)", " ", " ", " ", `<a href="https://en.wikipedia.org/wiki/Nirogacestat" target="_blank" class="text-indigo-600 hover:text-indigo-900">Ogsiveo</a>`]
+        ];
+        
+        // Function to populate the table with data
+        function populateTable() {
+            const tableBody = document.querySelector("#medicationTable tbody");
+            tableBody.innerHTML = ''; // Clear existing rows
+            data.forEach(rowData => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 text-sm text-gray-900 break-words">${rowData[0]}</td>
+                    <td class="px-6 py-4 text-sm text-gray-500 break-words">${rowData[1]}</td>
+                    <td class="px-6 py-4 text-sm text-gray-500 break-words">${rowData[2]}</td>
+                    <td class="px-6 py-4 text-sm text-gray-500 break-words">${rowData[4]}</td>
+                    <td class="px-6 py-4 text-sm text-gray-500 break-words">${rowData[3]}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function filterTable() {
+            // Get filter values
+            const nameFilter = document.getElementById('nameSearch').value.toUpperCase();
+            const strengthFilter = document.getElementById('strengthSearch').value.toUpperCase();
+            const dosageFilter = document.getElementById('dosageSearch').value.toUpperCase();
+            const tradeNameFilter = document.getElementById('tradeNameSearch').value.toUpperCase();
+            const reasonFilter = document.getElementById('reasonFilter').value.toUpperCase();
+
+            // Get table rows
+            const table = document.getElementById("medicationTable");
+            const tr = table.getElementsByTagName("tr");
+
+            // Loop through all table rows, and hide those who don't match the search query
+            for (let i = 1; i < tr.length; i++) { // Start from 1 to skip the header row
+                const tds = tr[i].getElementsByTagName("td");
+                
+                const nameTd = tds[0];
+                const strengthTd = tds[1];
+                const dosageTd = tds[2];
+                const tradeNameTd = tds[3];
+                const reasonTd = tds[4];
+
+                if (nameTd && strengthTd && dosageTd && reasonTd && tradeNameTd) {
+                    const nameText = nameTd.textContent || nameTd.innerText;
+                    const strengthText = strengthTd.textContent || strengthTd.innerText;
+                    const dosageText = dosageTd.textContent || dosageTd.innerText;
+                    const tradeNameText = tradeNameTd.textContent || tradeNameTd.innerText;
+                    const reasonText = reasonTd.textContent || reasonTd.innerText;
+
+                    // Match conditions
+                    const nameMatch = nameText.toUpperCase().indexOf(nameFilter) > -1;
+                    const strengthMatch = strengthText.toUpperCase().indexOf(strengthFilter) > -1;
+                    const dosageMatch = dosageText.toUpperCase().indexOf(dosageFilter) > -1;
+                    const tradeNameMatch = tradeNameText.toUpperCase().indexOf(tradeNameFilter) > -1;
+                    
+                    let reasonMatch = true;
+                    if (reasonFilter) {
+                        if (reasonFilter === "N/A") {
+                            reasonMatch = reasonText.trim() === '' || reasonText.toUpperCase().indexOf("N/A") > -1;
+                        } else {
+                            reasonMatch = reasonText.toUpperCase().indexOf(reasonFilter) > -1;
+                        }
+                    }
+
+                    if (nameMatch && strengthMatch && dosageMatch && tradeNameMatch && reasonMatch) {
+                        tr[i].style.display = "";
+                    } else {
+                        tr[i].style.display = "none";
+                    }
+                }
+            }
+        }
+        
+        // Initial population of the table when the page loads
+        document.addEventListener('DOMContentLoaded', populateTable);
+
+    </script>
+
+</body>
+</html>
+
